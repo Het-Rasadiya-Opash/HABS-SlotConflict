@@ -61,17 +61,17 @@ const Navbar = () => {
           <div className="hidden md:flex items-center gap-8">
             {currentUser ? (
               <div className="flex items-center gap-6 ">
-                <Link
-                  to="/dashboard"
-                  className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
-                >
-                  <LayoutDashboard className="w-4 h-4" />
-                  Dashboard
-                </Link>
+                {currentUser.role === "Doctor" && (
+                  <Link
+                    to="/dashboard"
+                    className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Dashboard
+                  </Link>
+                )}
 
-                {currentUser?.role === "Doctor" ? (
-                  <></>
-                ) : (
+                {currentUser?.role === "Patient" && (
                   <Link
                     to="/appointments"
                     className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
@@ -142,22 +142,26 @@ const Navbar = () => {
           {currentUser ? (
             <>
               <div className="h-px bg-slate-100 my-2" />
-              <Link
-                to="/dashboard"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
-              >
-                <LayoutDashboard className="w-5 h-5 text-slate-400" />
-                Dashboard
-              </Link>
-              <Link
-                to="/appointments"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
-              >
-                <Calendar className="w-5 h-5 text-slate-400" />
-                Appointments
-              </Link>
+              {currentUser.role === "Doctor" && (
+                <Link
+                  to="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                >
+                  <LayoutDashboard className="w-5 h-5 text-slate-400" />
+                  Dashboard
+                </Link>
+              )}
+              {currentUser.role === "Patient" && (
+                <Link
+                  to="/appointments"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                >
+                  <Calendar className="w-5 h-5 text-slate-400" />
+                  Appointments
+                </Link>
+              )}
               <div className="mt-4 px-4 py-4 bg-slate-50 rounded-2xl flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600">

@@ -97,7 +97,8 @@ export const updateBlackoutDates = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Doctor profile not found");
   }
 
-  doctorProfile.blackoutDates = blackoutDates;
+  const uniqueBlackoutDates = [...new Set(blackoutDates)];
+  doctorProfile.blackoutDates = uniqueBlackoutDates;
 
   const updatedProfile = await doctorProfile.save();
 
@@ -113,17 +114,22 @@ export const updateBlackoutDates = asyncHandler(async (req, res) => {
 });
 
 export const getMyProfile = asyncHandler(async (req, res) => {
-  const doctorProfile = await doctorProfileModel.find({ userId: req.user._id });
+  const doctorProfile = await doctorProfileModel.findOne({
+    userId: req.user?._id,
+  });
+
   if (!doctorProfile) {
     return res
-      .status(400)
+      .status(404)
       .json(
-        new ApiError(
-          400,
+        new ApiResponse(
+          404,
+          null,
           "Doctor Profile Not Found, Please create a Doctor Profile",
         ),
       );
   }
+
   return res
     .status(200)
     .json(
