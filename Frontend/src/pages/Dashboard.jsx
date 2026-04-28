@@ -8,7 +8,7 @@ import {
   MapPin,
   TrendingUp,
   User,
-  Users
+  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,6 +17,7 @@ import EmptyProfileState from "../components/EmptyProfileState";
 import InfoItem from "../components/InfoItem";
 import { setError, setLoading, setProfile } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
+import WeeklyAvailabilityModel from "../components/WeeklyAvailabilityModel";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -24,6 +25,8 @@ const Dashboard = () => {
   const { currentUser } = useSelector((state) => state.users);
 
   const [isBlackoutModalOpen, setIsBlackoutModalOpen] = useState(false);
+  const [isWeeklyAvailabilityOpen, setWeeklyAvailabilityModalOpen] =
+    useState(false);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
@@ -175,7 +178,10 @@ const Dashboard = () => {
                       Weekly Availability
                     </h3>
                   </div>
-                  <button className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group">
+                  <button
+                    onClick={() => setWeeklyAvailabilityModalOpen(true)}
+                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 group"
+                  >
                     Edit Schedule{" "}
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
                   </button>
@@ -263,6 +269,12 @@ const Dashboard = () => {
           isOpen={isBlackoutModalOpen}
           onClose={() => setIsBlackoutModalOpen(false)}
           currentDates={profile?.blackoutDates}
+        />
+
+        <WeeklyAvailabilityModel
+          onClose={() => setWeeklyAvailabilityModalOpen(false)}
+          isOpen={isWeeklyAvailabilityOpen}
+          currentWeeklyAvailability={profile?.weeklyAvailability}
         />
       </div>
     </div>
