@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import errorHandler from "./middlewares/error.middleware.js";
 export const app = express();
+import userRouters from "./routes/user.route.js";
 
 app.use(
   cors({
@@ -17,6 +18,7 @@ app.use(cookieParser());
 app.use(express.static("public"));
 
 //routes
+app.use("/api/users", userRouters);
 
 //error handler
 app.use(errorHandler);
