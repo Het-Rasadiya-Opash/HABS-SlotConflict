@@ -16,9 +16,9 @@ import { useDispatch, useSelector } from "react-redux";
 import BlackoutModal from "../components/BlackoutModal";
 import EmptyProfileState from "../components/EmptyProfileState";
 import InfoItem from "../components/InfoItem";
+import WeeklyAvailabilityModel from "../components/WeeklyAvailabilityModel";
 import { setError, setLoading, setProfile } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
-import WeeklyAvailabilityModel from "../components/WeeklyAvailabilityModel";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -101,7 +101,7 @@ const Dashboard = () => {
             <div className="lg:col-span-2 space-y-8">
               <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 relative overflow-hidden group">
                 <div className="relative flex flex-col md:flex-row gap-8 items-start">
-                  <div className="w-24 h-24 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                  <div className="w-24 h-24 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
                     <User className="w-12 h-12" />
                   </div>
 
