@@ -98,9 +98,6 @@ const WeeklyAvailabilityModel = ({
               <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">
                 Define Availability
               </h3>
-              <p className="text-sm text-slate-500 font-medium">
-                Set your weekly recurring schedule
-              </p>
             </div>
           </div>
           <button
