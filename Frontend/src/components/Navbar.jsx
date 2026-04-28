@@ -81,6 +81,16 @@ const Navbar = () => {
                   </Link>
                 )}
 
+                {currentUser?.role === "Clinic Admin" && (
+                  <Link
+                    to="/admin-panel"
+                    className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
+                  >
+                    <Building2 className="w-4 h-4" />
+                    Admin Panel
+                  </Link>
+                )}
+
                 <div className="flex items-center gap-3 pl-2">
                   <div className="flex flex-col items-end mr-2">
                     <span className="text-sm font-bold text-slate-900 leading-tight">
@@ -160,6 +170,16 @@ const Navbar = () => {
                 >
                   <Calendar className="w-5 h-5 text-slate-400" />
                   Appointments
+                </Link>
+              )}
+              {currentUser.role === "Clinic Admin" && (
+                <Link
+                  to="/admin-panel"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                >
+                  <Building2 className="w-5 h-5 text-slate-400" />
+                  Admin Panel
                 </Link>
               )}
               <div className="mt-4 px-4 py-4 bg-slate-50 rounded-2xl flex items-center justify-between">

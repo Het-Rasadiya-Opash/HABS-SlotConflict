@@ -9,6 +9,8 @@ import { useEffect } from "react";
 import apiRequest from "./utils/apiRequest";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
+import Appointments from "./pages/Appointments";
+import AdminPanel from "./pages/AdminPanel";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -35,8 +37,16 @@ const App = () => {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<Register />} />
 
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute allowedRoles={["Doctor"]} />}>
             <Route path="/dashboard" element={<Dashboard />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={["Patient"]} />}>
+            <Route path="/appointments" element={<Appointments />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={["Clinic Admin"]} />}>
+            <Route path="/admin-panel" element={<AdminPanel />} />
           </Route>
         </Routes>
       </main>
