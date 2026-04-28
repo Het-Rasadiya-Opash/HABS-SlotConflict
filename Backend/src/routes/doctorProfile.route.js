@@ -4,9 +4,12 @@ import { authorizeRole } from "../middlewares/authRole.middleware.js";
 import {
   createDoctorProfile,
   defineWeeklyAvailability,
+  getMyProfile,
   updateBlackoutDates,
 } from "../controllers/doctorProfile.controller.js";
 const router = express.Router();
+
+router.get("/", authMiddleware, authorizeRole("Doctor"), getMyProfile);
 
 router.post(
   "/weekly-availability",
@@ -28,6 +31,5 @@ router.post(
   authorizeRole("Doctor"),
   createDoctorProfile,
 );
-
 
 export default router;

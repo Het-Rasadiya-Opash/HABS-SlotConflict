@@ -112,3 +112,21 @@ export const updateBlackoutDates = asyncHandler(async (req, res) => {
     );
 });
 
+export const getMyProfile = asyncHandler(async (req, res) => {
+  const doctorProfile = await doctorProfileModel.find({ userId: req.user._id });
+  if (!doctorProfile) {
+    return res
+      .status(400)
+      .json(
+        new ApiError(
+          400,
+          "Doctor Profile Not Found, Please create a Doctor Profile",
+        ),
+      );
+  }
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, doctorProfile, "Doctor Profile Fetch successfully"),
+    );
+});
