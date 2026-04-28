@@ -6,15 +6,15 @@ import {
   Clock,
   IndianRupee,
   MapPin,
-  PlusCircle,
-  Stethoscope,
   TrendingUp,
   User,
-  Users,
+  Users
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BlackoutModal from "../components/BlackoutModal";
+import EmptyProfileState from "../components/EmptyProfileState";
+import InfoItem from "../components/InfoItem";
 import { setError, setLoading, setProfile } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
 
@@ -50,7 +50,12 @@ const Dashboard = () => {
   }, [dispatch, currentUser]);
 
   if (loading) {
-    return <DashboardSkeleton />;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <div className="w-12 h-12 border-4 border-orange-100 border-t-indigo-500 rounded-full animate-spin" />
+        <p className="text-gray-400 font-medium animate-pulse">Loading....</p>
+      </div>
+    );
   }
 
   return (
@@ -263,53 +268,5 @@ const Dashboard = () => {
     </div>
   );
 };
-
-const InfoItem = ({ icon: Icon, label, value }) => (
-  <div className="flex items-start gap-3">
-    <div className="mt-0.5 p-1.5 bg-slate-50 text-slate-400 rounded-lg group-hover:bg-indigo-50 group-hover:text-indigo-500 transition-colors">
-      <Icon className="w-4 h-4" />
-    </div>
-    <div>
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-        {label}
-      </p>
-      <p className="text-sm font-bold text-slate-700">{value}</p>
-    </div>
-  </div>
-);
-
-const EmptyProfileState = () => (
-  <div className="bg-white rounded-[2.5rem] p-8 md:p-16 shadow-sm border border-slate-100 flex flex-col items-center text-center">
-    <div className="w-24 h-24 bg-indigo-50 text-indigo-500 rounded-3xl flex items-center justify-center mb-8 relative">
-      <Stethoscope className="w-12 h-12" />
-    </div>
-    <h2 className="text-3xl font-extrabold text-slate-900 mb-4 max-w-md">
-      Complete Your Professional Profile
-    </h2>
-
-    <button className="flex items-center gap-2 px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-bold shadow-xl shadow-indigo-100 hover:shadow-indigo-200 transition-all hover:-translate-y-0.5">
-      <PlusCircle className="w-5 h-5" />
-      Create Doctor Profile
-    </button>
-  </div>
-);
-
-const DashboardSkeleton = () => (
-  <div className="min-h-screen bg-slate-50/50 p-4 md:p-8 animate-pulse">
-    <div className="max-w-7xl mx-auto space-y-8">
-      <div className="h-12 w-64 bg-slate-200 rounded-xl" />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="h-64 bg-slate-200 rounded-3xl" />
-          <div className="h-48 bg-slate-200 rounded-3xl" />
-        </div>
-        <div className="space-y-6">
-          <div className="h-48 bg-slate-200 rounded-3xl" />
-          <div className="h-64 bg-slate-200 rounded-3xl" />
-        </div>
-      </div>
-    </div>
-  </div>
-);
 
 export default Dashboard;
