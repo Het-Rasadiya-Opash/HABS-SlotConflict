@@ -42,7 +42,6 @@ const LoginPage = () => {
 
     try {
       const res = await apiRequest.post("/users/login", formData);
-      console.log(res.data.data.user);
       dispatch(setCurrentUser(res.data.data.user));
       navigate("/");
     } catch (err) {

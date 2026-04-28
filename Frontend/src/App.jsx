@@ -7,6 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setCurrentUser, setCheckingAuth } from "./features/usersSlice";
 import { useEffect } from "react";
 import apiRequest from "./utils/apiRequest";
+import Navbar from "./components/Navbar";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -26,6 +27,7 @@ const App = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50 font-sans text-gray-900">
+      <Navbar/>
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
