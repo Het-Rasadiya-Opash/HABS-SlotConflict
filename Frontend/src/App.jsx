@@ -11,6 +11,7 @@ import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
 import Appointments from "./pages/Appointments";
 import AdminPanel from "./pages/AdminPanel";
+import BookAppointmentPage from "./pages/BookAppointmentPage";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -43,6 +44,7 @@ const App = () => {
 
           <Route element={<ProtectedRoute allowedRoles={["Patient"]} />}>
             <Route path="/appointments" element={<Appointments />} />
+            <Route path="/book-appointment" element={<BookAppointmentPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["Clinic Admin"]} />}>

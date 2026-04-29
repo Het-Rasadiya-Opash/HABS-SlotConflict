@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
+import { useDispatch } from "react-redux";
+import { setBookingContext } from "../features/appointmentSlice";
 import apiRequest from "../utils/apiRequest";
 import {
   Search,
@@ -6,12 +9,14 @@ import {
   Calendar,
   Stethoscope,
   Clock,
-  Star,
   ArrowRight,
   Loader2,
 } from "lucide-react";
 
 const Home = () => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const [specialty, setSpecialty] = useState("");
   const [location, setLocation] = useState("");
   const [date, setDate] = useState("");
@@ -19,6 +24,26 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searched, setSearched] = useState(false);
+
+  const [selectedSlotKey, setSelectedSlotKey] = useState(null);
+  const [slotsByDoctor, setSlotsByDoctor] = useState({});
+
+  const handleSlotClick = (doctor, slot, key) => {
+    setSelectedSlotKey(key);
+    setSlotsByDoctor((prev) => ({ ...prev, [doctor._id]: slot }));
+  };
+
+  const handleBookAppointment = (doctor) => {
+    const slot = slotsByDoctor[doctor._id];
+    if (!slot) return;
+    dispatch(
+      setBookingContext({
+        doctor,
+        slot,
+      }),
+    );
+    navigate("/book-appointment");
+  };
 
   const handleSearch = async (e) => {
     if (e) e.preventDefault();
@@ -209,14 +234,25 @@ const Home = () => {
                               {date}
                             </p>
                             <div className="flex flex-wrap gap-3">
-                              {daySlots.map((slot, index) => (
-                                <div
-                                  key={`${date}-${index}`}
-                                  className="bg-[#F3F6FF] text-[#5D5FEF] text-sm px-6 py-3 rounded-[12px] font-semibold border border-[#E8EFFF] transition-colors hover:bg-[#E8EFFF] cursor-pointer"
-                                >
-                                  {slot.time} - {slot.endTime}
-                                </div>
-                              ))}
+                              {daySlots.map((slot, index) => {
+                                const key = `${doctor._id}-${date}-${index}`;
+                                const isSelected = selectedSlotKey === key;
+                                return (
+                                  <div
+                                    key={key}
+                                    onClick={() =>
+                                      handleSlotClick(doctor, slot, key)
+                                    }
+                                    className={`text-sm px-6 py-3 rounded-[12px] font-semibold border transition-all cursor-pointer select-none ${
+                                      isSelected
+                                        ? "bg-[#5D5FEF] text-white border-[#5D5FEF] shadow-md shadow-indigo-200"
+                                        : "bg-[#F3F6FF] text-[#5D5FEF] border-[#E8EFFF] hover:bg-[#E8EFFF]"
+                                    }`}
+                                  >
+                                    {slot.time} - {slot.endTime}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         ))
@@ -230,8 +266,14 @@ const Home = () => {
                     </div>
                   </div>
 
-                  <button className="w-full bg-[#000000] hover:bg-slate-900 text-white font-bold py-4 rounded-[12px] transition-all flex items-center justify-center gap-2 group">
-                    Book Appointment
+                  <button
+                    onClick={() => handleBookAppointment(doctor)}
+                    disabled={!slotsByDoctor[doctor._id]}
+                    className="w-full bg-[#000000] hover:bg-slate-900 text-white font-bold py-4 rounded-[12px] transition-all flex items-center justify-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {slotsByDoctor[doctor._id]
+                      ? "Book Appointment"
+                      : "Select a Slot First"}
                     <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
                   </button>
                 </div>

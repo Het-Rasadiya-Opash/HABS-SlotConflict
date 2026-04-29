@@ -183,19 +183,28 @@ export const getMyProfile = asyncHandler(async (req, res) => {
 
 const getNextOpenSlots = (doctor, startDate, n = 5) => {
   const slots = [];
-  let currentDate = new Date(startDate);
-  const now = new Date();
+
+  // Work entirely in UTC so that HH:mm in slotStartUTC/slotEndUTC
+  // matches the doctor's availability window strings (also UTC-based).
+  const nowMs = Date.now();
+
+  // Snap startDate to midnight UTC
+  const start = new Date(startDate);
+  let curMs = Date.UTC(
+    start.getUTCFullYear(),
+    start.getUTCMonth(),
+    start.getUTCDate(),
+  );
+
+  const UTC_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   for (let i = 0; i < 30 && slots.length < n; i++) {
-    const year = currentDate.getFullYear();
-    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-    const day = String(currentDate.getDate()).padStart(2, "0");
-    const dateStr = `${year}-${month}-${day}`;
-
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const dayName = days[currentDate.getDay()];
-
-    
+    const d = new Date(curMs);
+    const year  = d.getUTCFullYear();
+    const month = d.getUTCMonth();
+    const date  = d.getUTCDate();
+    const dateStr = `${year}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
+    const dayName = UTC_DAYS[d.getUTCDay()];
 
     if (!doctor.blackoutDates.includes(dateStr)) {
       const windows = doctor.weeklyAvailability[dayName] || [];
@@ -204,11 +213,11 @@ const getNextOpenSlots = (doctor, startDate, n = 5) => {
       );
 
       for (const window of sortedWindows) {
-        let [startH, startM] = window.start.split(":").map(Number);
-        let [endH, endM] = window.end.split(":").map(Number);
+        const [startH, startM] = window.start.split(":").map(Number);
+        const [endH,   endM]   = window.end.split(":").map(Number);
 
         let currentTotalM = startH * 60 + startM;
-        const endTotalM = endH * 60 + endM;
+        const endTotalM   = endH   * 60 + endM;
 
         while (
           currentTotalM + doctor.slotDurationMin <= endTotalM &&
@@ -216,39 +225,37 @@ const getNextOpenSlots = (doctor, startDate, n = 5) => {
         ) {
           const h = Math.floor(currentTotalM / 60);
           const m = currentTotalM % 60;
-          const slotTimeStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+          const slotTimeStr = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 
-          const endM = currentTotalM + doctor.slotDurationMin;
-          const endH = Math.floor(endM / 60);
-          const endM_ = endM % 60;
-          const endTimeStr = `${endH.toString().padStart(2, "0")}:${endM_.toString().padStart(2, "0")}`;
+          const endTotalMSlot = currentTotalM + doctor.slotDurationMin;
+          const endH2 = Math.floor(endTotalMSlot / 60);
+          const endM2 = endTotalMSlot % 60;
+          const endTimeStr = `${String(endH2).padStart(2, "0")}:${String(endM2).padStart(2, "0")}`;
 
-          const slotDateTime = new Date(
-            year,
-            currentDate.getMonth(),
-            currentDate.getDate(),
-            h,
-            m,
-            0,
-            0,
-          );
+          const slotStartMs = Date.UTC(year, month, date, h, m);
+          const slotEndMs   = slotStartMs + doctor.slotDurationMin * 60 * 1000;
 
-          if (slotDateTime > now) {
+          if (slotStartMs > nowMs) {
             slots.push({
               date: dateStr,
               time: slotTimeStr,
               endTime: endTimeStr,
+              slotStartUTC: new Date(slotStartMs).toISOString(),
+              slotEndUTC:   new Date(slotEndMs).toISOString(),
             });
           }
+
           currentTotalM += doctor.slotDurationMin;
         }
       }
     }
-    currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(0, 0, 0, 0);
+
+    curMs += 24 * 60 * 60 * 1000;
   }
+
   return slots;
 };
+
 
 export const searchDoctor = asyncHandler(async (req, res) => {
   const { specialty, location, date, n = 5 } = req.query;
