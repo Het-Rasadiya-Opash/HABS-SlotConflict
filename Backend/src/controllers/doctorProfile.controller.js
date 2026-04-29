@@ -3,36 +3,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-export const defineWeeklyAvailability = asyncHandler(async (req, res) => {
-  const { weeklyAvailability } = req.body;
-
-  if (!weeklyAvailability) {
-    throw new ApiError(400, "Weekly availability data is required");
-  }
-
-  const doctorProfile = await doctorProfileModel.findOne({
-    userId: req.user?._id,
-  });
-
-  if (!doctorProfile) {
-    throw new ApiError(404, "Doctor profile not found");
-  }
-
-  doctorProfile.weeklyAvailability = weeklyAvailability;
-
-  const updatedProfile = await doctorProfile.save();
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        updatedProfile,
-        "Weekly availability updated successfully",
-      ),
-    );
-});
-
 export const createDoctorProfile = asyncHandler(async (req, res) => {
   const {
     specialty,
@@ -78,6 +48,80 @@ export const createDoctorProfile = asyncHandler(async (req, res) => {
         201,
         doctorProfile,
         "Doctor profile created successfully",
+      ),
+    );
+});
+
+export const updateDoctorProfile = asyncHandler(async (req, res) => {
+  const {
+    specialty,
+    qualifications,
+    experienceYears,
+    consultationFee,
+    location,
+    slotDurationMin,
+    maxPatientsPerSlot,
+    isAcceptingAppointments,
+  } = req.body;
+
+  const doctorProfile = await doctorProfileModel.findOneAndUpdate(
+    { userId: req.user?._id },
+    {
+      $set: {
+        specialty,
+        qualifications,
+        experienceYears,
+        consultationFee,
+        location,
+        slotDurationMin,
+        maxPatientsPerSlot,
+        isAcceptingAppointments,
+      },
+    },
+    { new: true, runValidators: true },
+  );
+
+  if (!doctorProfile) {
+    throw new ApiError(404, "Doctor profile not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        doctorProfile,
+        "Doctor profile updated successfully",
+      ),
+    );
+});
+
+export const defineWeeklyAvailability = asyncHandler(async (req, res) => {
+  const { weeklyAvailability } = req.body;
+
+  if (!weeklyAvailability) {
+    throw new ApiError(400, "Weekly availability data is required");
+  }
+
+  const doctorProfile = await doctorProfileModel.findOne({
+    userId: req.user?._id,
+  });
+
+  if (!doctorProfile) {
+    throw new ApiError(404, "Doctor profile not found");
+  }
+
+  doctorProfile.weeklyAvailability = weeklyAvailability;
+
+  const updatedProfile = await doctorProfile.save();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        updatedProfile,
+        "Weekly availability updated successfully",
       ),
     );
 });
@@ -137,46 +181,4 @@ export const getMyProfile = asyncHandler(async (req, res) => {
     );
 });
 
-export const updateDoctorProfile = asyncHandler(async (req, res) => {
-  const {
-    specialty,
-    qualifications,
-    experienceYears,
-    consultationFee,
-    location,
-    slotDurationMin,
-    maxPatientsPerSlot,
-    isAcceptingAppointments,
-  } = req.body;
 
-  const doctorProfile = await doctorProfileModel.findOneAndUpdate(
-    { userId: req.user?._id },
-    {
-      $set: {
-        specialty,
-        qualifications,
-        experienceYears,
-        consultationFee,
-        location,
-        slotDurationMin,
-        maxPatientsPerSlot,
-        isAcceptingAppointments,
-      },
-    },
-    { new: true, runValidators: true },
-  );
-
-  if (!doctorProfile) {
-    throw new ApiError(404, "Doctor profile not found");
-  }
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        doctorProfile,
-        "Doctor profile updated successfully",
-      ),
-    );
-});
