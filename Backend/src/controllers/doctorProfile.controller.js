@@ -136,3 +136,47 @@ export const getMyProfile = asyncHandler(async (req, res) => {
       new ApiResponse(200, doctorProfile, "Doctor Profile Fetch successfully"),
     );
 });
+
+export const updateDoctorProfile = asyncHandler(async (req, res) => {
+  const {
+    specialty,
+    qualifications,
+    experienceYears,
+    consultationFee,
+    location,
+    slotDurationMin,
+    maxPatientsPerSlot,
+    isAcceptingAppointments,
+  } = req.body;
+
+  const doctorProfile = await doctorProfileModel.findOneAndUpdate(
+    { userId: req.user?._id },
+    {
+      $set: {
+        specialty,
+        qualifications,
+        experienceYears,
+        consultationFee,
+        location,
+        slotDurationMin,
+        maxPatientsPerSlot,
+        isAcceptingAppointments,
+      },
+    },
+    { new: true, runValidators: true },
+  );
+
+  if (!doctorProfile) {
+    throw new ApiError(404, "Doctor profile not found");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        doctorProfile,
+        "Doctor profile updated successfully",
+      ),
+    );
+});

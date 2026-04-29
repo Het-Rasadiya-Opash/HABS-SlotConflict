@@ -15,11 +15,13 @@ import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BlackoutModal from "../components/BlackoutModal";
 import CreateDoctorModal from "../components/CreateDoctorModal";
+import EditDoctorProfileModal from "../components/EditDoctorProfileModal";
 import EmptyProfileState from "../components/EmptyProfileState";
 import InfoItem from "../components/InfoItem";
 import WeeklyAvailabilityModel from "../components/WeeklyAvailabilityModel";
 import { setError, setLoading, setProfile } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
+import { Edit3 } from "lucide-react";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -30,6 +32,7 @@ const Dashboard = () => {
   const [isWeeklyAvailabilityOpen, setWeeklyAvailabilityModalOpen] =
     useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
@@ -107,15 +110,24 @@ const Dashboard = () => {
                     <User className="w-12 h-12" />
                   </div>
 
-                  <div className="flex-1 space-y-4">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <h2 className="text-2xl font-bold text-slate-900">
-                        {profile.specialty}
-                      </h2>
-                      <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider">
-                        {profile.experienceYears} Years Exp.
-                      </span>
-                    </div>
+                    <div className="flex-1 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <h2 className="text-2xl font-bold text-slate-900">
+                            {profile.specialty}
+                          </h2>
+                          <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider">
+                            {profile.experienceYears} Years Exp.
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => setIsEditModalOpen(true)}
+                          className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all group"
+                          title="Edit Profile"
+                        >
+                          <Edit3 className="w-5 h-5 transition-transform group-hover:scale-110" />
+                        </button>
+                      </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <InfoItem
@@ -318,6 +330,12 @@ const Dashboard = () => {
         <CreateDoctorModal
           isOpen={isCreateModalOpen}
           onClose={() => setIsCreateModalOpen(false)}
+        />
+
+        <EditDoctorProfileModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          profile={profile}
         />
       </div>
     </div>

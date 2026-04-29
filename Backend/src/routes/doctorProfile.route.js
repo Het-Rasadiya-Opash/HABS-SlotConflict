@@ -5,6 +5,7 @@ import {
   createDoctorProfile,
   defineWeeklyAvailability,
   getMyProfile,
+  updateDoctorProfile,
   updateBlackoutDates,
 } from "../controllers/doctorProfile.controller.js";
 const router = express.Router();
@@ -30,6 +31,13 @@ router.post(
   authMiddleware,
   authorizeRole("Doctor"),
   createDoctorProfile,
+);
+
+router.patch(
+  "/update",
+  authMiddleware,
+  authorizeRole("Doctor"),
+  updateDoctorProfile,
 );
 
 export default router;
