@@ -1,5 +1,6 @@
 import { TrendingUp } from "lucide-react";
 import React, { useState } from "react";
+import { DateTime } from "luxon";
 import BlackoutModal from "./BlackoutModal";
 
 const BlackoutData = ({ profile }) => {
@@ -22,7 +23,7 @@ const BlackoutData = ({ profile }) => {
                   key={i}
                   className="px-3 py-1 bg-red-50 text-red-600 text-[11px] font-bold rounded-lg border border-red-100"
                 >
-                  {date}
+                  {DateTime.fromISO(date).toFormat("MMM d, yyyy")}
                 </span>
               ))}
             </div>

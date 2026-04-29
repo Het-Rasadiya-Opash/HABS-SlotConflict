@@ -59,9 +59,12 @@ const WeeklyAvailabilityData = ({ profile }) => {
                         .padStart(2, "0");
                       const nextM_ = (nextM % 60).toString().padStart(2, "0");
 
+                      const formattedStart = DateTime.fromObject({ hour: Number(h), minute: Number(m) }).toFormat("hh:mm a");
+                      const formattedEnd = DateTime.fromObject({ hour: Number(nextH), minute: Number(nextM_) }).toFormat("hh:mm a");
+
                       allSlots.push({
-                        start: `${h}:${m}`,
-                        end: `${nextH}:${nextM_}`,
+                        start: formattedStart,
+                        end: formattedEnd,
                       });
                       currentM += duration;
                     }

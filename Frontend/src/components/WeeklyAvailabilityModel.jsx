@@ -1,6 +1,7 @@
-import { AlertCircle, Clock, Plus, Trash2, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { AlertCircle, Clock, Plus, Trash2, X, ChevronDown } from "lucide-react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch } from "react-redux";
+import { DateTime } from "luxon";
 import { setWeeklyAvailability } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
 
@@ -15,6 +16,22 @@ const WeeklyAvailabilityModel = ({
   const [availability, setAvailability] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  const timeOptions = useMemo(() => {
+    const options = [];
+    for (let h = 0; h < 24; h++) {
+      for (let m = 0; m < 60; m += 15) {
+        const hh = h.toString().padStart(2, "0");
+        const mm = m.toString().padStart(2, "0");
+        const value = `${hh}:${mm}`;
+        const label = DateTime.fromObject({ hour: h, minute: m }).toFormat(
+          "hh:mm a",
+        );
+        options.push({ value, label });
+      }
+    }
+    return options;
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -159,40 +176,56 @@ const WeeklyAvailabilityModel = ({
                       >
                         <div className="flex-1 grid grid-cols-2 gap-3">
                           <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-white text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <label className="absolute -top-2 left-3 px-1 bg-white text-[10px] font-bold text-slate-400 uppercase tracking-widest z-10">
                               Start
                             </label>
-                            <input
-                              type="time"
-                              value={slot.start}
-                              onChange={(e) =>
-                                handleTimeChange(
-                                  day,
-                                  idx,
-                                  "start",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                            />
+                            <div className="relative">
+                              <select
+                                value={slot.start}
+                                onChange={(e) =>
+                                  handleTimeChange(
+                                    day,
+                                    idx,
+                                    "start",
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                              >
+                                {timeOptions.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
                           </div>
                           <div className="relative">
-                            <label className="absolute -top-2 left-3 px-1 bg-white text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <label className="absolute -top-2 left-3 px-1 bg-white text-[10px] font-bold text-slate-400 uppercase tracking-widest z-10">
                               End
                             </label>
-                            <input
-                              type="time"
-                              value={slot.end}
-                              onChange={(e) =>
-                                handleTimeChange(
-                                  day,
-                                  idx,
-                                  "end",
-                                  e.target.value,
-                                )
-                              }
-                              className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
-                            />
+                            <div className="relative">
+                              <select
+                                value={slot.end}
+                                onChange={(e) =>
+                                  handleTimeChange(
+                                    day,
+                                    idx,
+                                    "end",
+                                    e.target.value,
+                                  )
+                                }
+                                className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none cursor-pointer"
+                              >
+                                {timeOptions.map((opt) => (
+                                  <option key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </option>
+                                ))}
+                              </select>
+                              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                            </div>
                           </div>
                         </div>
                         <button

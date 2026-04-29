@@ -233,7 +233,7 @@ const Home = () => {
                         ).map(([date, daySlots]) => (
                           <div key={date}>
                             <p className="text-sm font-bold text-[#111827] mb-3">
-                              {date}
+                              {DateTime.fromISO(date).toFormat("ccc, MMM d")}
                             </p>
                             <div className="flex flex-wrap gap-3">
                               {daySlots.map((slot, index) => {

@@ -173,7 +173,7 @@ const BookAppointmentPage = () => {
             <SummaryChip
               icon={<Calendar className="h-4 w-4" />}
               label="Date"
-              value={DateTime.fromISO(slot.slotStartUTC).toLocal().toFormat("yyyy-MM-dd")}
+              value={DateTime.fromISO(slot.slotStartUTC).toLocal().toFormat("ccc, MMM d, yyyy")}
             />
             <SummaryChip
               icon={<Clock className="h-4 w-4" />}
