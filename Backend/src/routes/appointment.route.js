@@ -3,6 +3,7 @@ import { authMiddleware } from "../middlewares/auth.middleware.js";
 import { authorizeRole } from "../middlewares/authRole.middleware.js";
 import {
   bookAppointment,
+  getAppointmentByDoctor,
   getAppointmentByPatient,
 } from "../controllers/appointment.controller.js";
 
@@ -14,6 +15,14 @@ router.get(
   authorizeRole("Patient"),
   getAppointmentByPatient,
 );
+
+router.get(
+  "/doctor",
+  authMiddleware,
+  authorizeRole("Doctor"),
+  getAppointmentByDoctor,
+);
+
 router.post("/book", authMiddleware, authorizeRole("Patient"), bookAppointment);
 
 export default router;

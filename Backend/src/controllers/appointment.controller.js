@@ -247,3 +247,91 @@ export const getAppointmentByPatient = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, shaped, "Fetched patient appointments"));
 });
+
+export const getAppointmentByDoctor = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { date } = req.query;
+
+  if (!userId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  if (req.user.role !== "Doctor") {
+    throw new ApiError(403, "Only doctors can view these appointments");
+  }
+
+  const doctorProfile = await doctorProfileModel.findOne({ userId }).lean();
+  if (!doctorProfile) {
+    throw new ApiError(404, "Doctor profile not found");
+  }
+
+  const filter = { doctorId: doctorProfile._id };
+
+  const targetDate = date || DateTime.utc().toFormat("yyyy-MM-dd");
+
+  const startOfDay = DateTime.fromISO(targetDate, { zone: "utc" })
+    .startOf("day")
+    .toJSDate();
+  const endOfDay = DateTime.fromISO(targetDate, { zone: "utc" })
+    .endOf("day")
+    .toJSDate();
+  filter.slotStartUTC = { $gte: startOfDay, $lte: endOfDay };
+
+  const appointments = await appointmentModel
+    .find(filter)
+    .sort({ slotStartUTC: 1 })
+    .populate({
+      path: "doctorId",
+      select: "specialty consultationFee location slotDurationMin",
+      populate: {
+        path: "userId",
+        select: "username email",
+      },
+    })
+    .populate({
+      path: "patientId",
+      select: "username email",
+    })
+    .lean();
+
+  const shaped = appointments.map((appt) => ({
+    _id: appt._id,
+    bookingId: appt.bookingId,
+    status: appt.status,
+
+    slot: {
+      startUTC: appt.slotStartUTC,
+      endUTC: appt.slotEndUTC,
+    },
+
+    doctor: appt.doctorId
+      ? {
+          id: appt.doctorId._id,
+          name: appt.doctorId.userId?.username ?? null,
+          email: appt.doctorId.userId?.email ?? null,
+          specialty: appt.doctorId.specialty,
+          consultationFee: appt.doctorId.consultationFee,
+          location: appt.doctorId.location,
+          slotDurationMin: appt.doctorId.slotDurationMin,
+        }
+      : null,
+
+    patient: appt.patientId
+      ? {
+          id: appt.patientId._id,
+          username: appt.patientId.username,
+          email: appt.patientId.email,
+        }
+      : null,
+
+    reason: appt.reason,
+    notes: appt.notes ?? null,
+    bookedAt: appt.createdAt,
+    cancelledAt: appt.cancelledAt ?? null,
+    cancellationReason: appt.cancellationReason ?? null,
+  }));
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, shaped, "Fetched doctor appointments"));
+});
