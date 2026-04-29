@@ -5,6 +5,7 @@ import errorHandler from "./middlewares/error.middleware.js";
 export const app = express();
 import userRouters from "./routes/user.route.js";
 import doctorProfileRouter from "./routes/doctorProfile.route.js";
+import appointmentRouter from "./routes/appointment.route.js";
 
 app.use(
   cors({
@@ -21,6 +22,7 @@ app.use(express.static("public"));
 //routes
 app.use("/api/users", userRouters);
 app.use("/api/doctor", doctorProfileRouter);
+app.use("/api/appointment", appointmentRouter);
 
 //error handler
 app.use(errorHandler);
