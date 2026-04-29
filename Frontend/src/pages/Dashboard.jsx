@@ -14,6 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import BlackoutModal from "../components/BlackoutModal";
+import CreateDoctorModal from "../components/CreateDoctorModal";
 import EmptyProfileState from "../components/EmptyProfileState";
 import InfoItem from "../components/InfoItem";
 import WeeklyAvailabilityModel from "../components/WeeklyAvailabilityModel";
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const [isBlackoutModalOpen, setIsBlackoutModalOpen] = useState(false);
   const [isWeeklyAvailabilityOpen, setWeeklyAvailabilityModalOpen] =
     useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchDoctorProfile = async () => {
@@ -95,7 +97,7 @@ const Dashboard = () => {
         )}
 
         {!profile ? (
-          <EmptyProfileState />
+          <EmptyProfileState onOpenCreateModal={() => setIsCreateModalOpen(true)} />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
@@ -311,6 +313,11 @@ const Dashboard = () => {
           onClose={() => setWeeklyAvailabilityModalOpen(false)}
           isOpen={isWeeklyAvailabilityOpen}
           currentWeeklyAvailability={profile?.weeklyAvailability}
+        />
+
+        <CreateDoctorModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
         />
       </div>
     </div>
