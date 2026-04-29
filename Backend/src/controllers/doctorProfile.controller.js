@@ -195,9 +195,7 @@ const getNextOpenSlots = (doctor, startDate, n = 5) => {
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const dayName = days[currentDate.getDay()];
 
-    if (doctor.blackoutDates.includes(dateStr)) {
-      throw new ApiError(400, "Doctor on Holiday");
-    }
+    
 
     if (!doctor.blackoutDates.includes(dateStr)) {
       const windows = doctor.weeklyAvailability[dayName] || [];

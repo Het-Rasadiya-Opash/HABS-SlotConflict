@@ -64,25 +64,25 @@ const BlackoutModal = ({ isOpen, onClose, currentDates }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-md rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+      <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 border border-slate-100">
+        <div className="px-8 py-6 bg-indigo-600 flex items-center justify-between text-white">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-              <Calendar className="w-5 h-5" />
+            <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-md">
+              <Calendar className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-bold text-slate-900">
-              Manage Blackouts
-            </h3>
+            <div>
+              <h3 className="text-xl font-bold">Manage Blackouts</h3>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 text-slate-400 hover:text-slate-600 rounded-full transition-colors"
+            className="p-2 hover:bg-white/20 rounded-xl transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-8 space-y-6">
           {localError && (
             <div className="bg-rose-50 border border-rose-100 text-rose-600 p-4 rounded-2xl flex items-center gap-3 animate-in slide-in-from-top-2 duration-300">
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
@@ -149,17 +149,17 @@ const BlackoutModal = ({ isOpen, onClose, currentDates }) => {
           </div>
         </div>
 
-        <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex gap-3">
+        <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
           <button
             onClick={onClose}
-            className="flex-1 py-3.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+            className="flex-1 py-4 text-sm font-bold text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all"
           >
             Cancel
           </button>
           <button
             onClick={handleUpdateBlackouts}
             disabled={isSubmitting}
-            className="flex-1 py-3.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-sm font-bold rounded-xl transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-2"
+            className="flex-[2] py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-bold rounded-2xl shadow-xl shadow-indigo-100 hover:shadow-indigo-200 transition-all flex items-center justify-center gap-2"
           >
             {isSubmitting ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />

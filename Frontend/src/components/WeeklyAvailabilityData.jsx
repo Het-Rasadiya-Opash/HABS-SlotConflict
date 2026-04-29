@@ -39,7 +39,6 @@ const WeeklyAvailabilityData = ({ profile }) => {
                 const windows = profile.weeklyAvailability?.[day] || [];
                 const slotDuration = profile.slotDurationMin || 30;
 
-                // Calculate individual slots from windows
                 const calculateSlots = (windows, duration) => {
                   const allSlots = [];
                   windows.forEach((window) => {
@@ -57,9 +56,7 @@ const WeeklyAvailabilityData = ({ profile }) => {
                       const nextH = Math.floor(nextM / 60)
                         .toString()
                         .padStart(2, "0");
-                      const nextM_ = (nextM % 60)
-                        .toString()
-                        .padStart(2, "0");
+                      const nextM_ = (nextM % 60).toString().padStart(2, "0");
 
                       allSlots.push({
                         start: `${h}:${m}`,
@@ -109,10 +106,15 @@ const WeeklyAvailabilityData = ({ profile }) => {
                             className={`py-2 px-1 rounded-xl text-[10px] font-bold text-center transition-all cursor-default
                                       ${
                                         day ===
-                                          ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
-                                            new Date().getDay()
-                                          ] &&
-                                        i === 0
+                                          [
+                                            "Sun",
+                                            "Mon",
+                                            "Tue",
+                                            "Wed",
+                                            "Thu",
+                                            "Fri",
+                                            "Sat",
+                                          ][new Date().getDay()] && i === 0
                                           ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
                                           : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                                       }`}

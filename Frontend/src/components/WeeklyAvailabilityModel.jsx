@@ -88,23 +88,21 @@ const WeeklyAvailabilityModel = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
-        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl shadow-sm">
+      <div className="bg-white w-full max-w-2xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh] border border-slate-100">
+        <div className="px-8 py-6 bg-indigo-600 flex items-center justify-between text-white">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-md">
               <Clock className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-                Define Availability
-              </h3>
+              <h3 className="text-xl font-bold">Define Weekly Availability</h3>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2.5 hover:bg-slate-200/50 text-slate-400 hover:text-slate-600 rounded-full transition-all"
+            className="p-2 hover:bg-white/20 rounded-xl transition-colors"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
@@ -216,25 +214,25 @@ const WeeklyAvailabilityModel = ({
           </div>
         </div>
 
-        <div className="p-8 bg-slate-50/80 border-t border-slate-100 flex gap-4">
+        <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
           <button
             onClick={onClose}
-            className="flex-1 py-4 text-sm font-bold text-slate-600 hover:bg-slate-200/50 rounded-2xl transition-all active:scale-[0.98]"
+            className="flex-1 py-4 text-sm font-bold text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-2xl transition-all"
           >
             Discard Changes
           </button>
           <button
             onClick={handleSave}
             disabled={isSubmitting}
-            className="flex-[2] py-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-sm font-bold rounded-2xl transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-3 active:scale-[0.98]"
+            className="flex-[2] py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-bold rounded-2xl shadow-xl shadow-indigo-100 hover:shadow-indigo-200 transition-all flex items-center justify-center gap-3"
           >
             {isSubmitting ? (
               <>
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Updating Schedule...
+                Updating...
               </>
             ) : (
-              "Save Weekly Schedule"
+              "Save Schedule"
             )}
           </button>
         </div>
