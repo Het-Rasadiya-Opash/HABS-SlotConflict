@@ -36,8 +36,43 @@ const WeeklyAvailabilityData = ({ profile }) => {
           <div className="flex lg:grid lg:grid-cols-7 gap-4 min-w-max lg:min-w-0">
             {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
               (day, index) => {
-                const slots = profile.weeklyAvailability?.[day] || [];
-                const isActive = slots.length > 0;
+                const windows = profile.weeklyAvailability?.[day] || [];
+                const slotDuration = profile.slotDurationMin || 30;
+
+                // Calculate individual slots from windows
+                const calculateSlots = (windows, duration) => {
+                  const allSlots = [];
+                  windows.forEach((window) => {
+                    let [startH, startM] = window.start.split(":").map(Number);
+                    let [endH, endM] = window.end.split(":").map(Number);
+                    let currentM = startH * 60 + startM;
+                    const endMTotal = endH * 60 + endM;
+                    while (currentM + duration <= endMTotal) {
+                      const h = Math.floor(currentM / 60)
+                        .toString()
+                        .padStart(2, "0");
+                      const m = (currentM % 60).toString().padStart(2, "0");
+
+                      const nextM = currentM + duration;
+                      const nextH = Math.floor(nextM / 60)
+                        .toString()
+                        .padStart(2, "0");
+                      const nextM_ = (nextM % 60)
+                        .toString()
+                        .padStart(2, "0");
+
+                      allSlots.push({
+                        start: `${h}:${m}`,
+                        end: `${nextH}:${nextM_}`,
+                      });
+                      currentM += duration;
+                    }
+                  });
+                  return allSlots;
+                };
+
+                const daySlots = calculateSlots(windows, slotDuration);
+                const isActive = daySlots.length > 0;
 
                 const d = new Date();
                 const currentDay = d.getDay();
@@ -58,26 +93,27 @@ const WeeklyAvailabilityData = ({ profile }) => {
                     className="flex flex-col items-center gap-4 w-32 lg:w-full"
                   >
                     <div className="text-center space-y-1">
-                      {/* <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                {day.toUpperCase()}
-                              </p> */}
                       <p className="text-sm font-extrabold text-slate-800">
                         {day.toUpperCase()}
                       </p>
-                      {/* <p className="text-sm font-extrabold text-slate-800">
-                                {dateStr}
-                              </p> */}
+                      <p className="text-xs font-medium text-slate-500">
+                        {dateStr}
+                      </p>
                     </div>
 
                     <div className="flex flex-col gap-2 w-full">
                       {isActive ? (
-                        slots.map((slot, i) => (
+                        daySlots.map((slot, i) => (
                           <div
                             key={i}
-                            className={`py-3 px-2 rounded-xl text-[11px] font-black text-center transition-all cursor-default
+                            className={`py-2 px-1 rounded-xl text-[10px] font-bold text-center transition-all cursor-default
                                       ${
-                                        day === "Tue" && i === 0
-                                          ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100"
+                                        day ===
+                                          ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][
+                                            new Date().getDay()
+                                          ] &&
+                                        i === 0
+                                          ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
                                           : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                                       }`}
                           >

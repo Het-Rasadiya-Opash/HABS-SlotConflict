@@ -181,4 +181,117 @@ export const getMyProfile = asyncHandler(async (req, res) => {
     );
 });
 
+const getNextOpenSlots = (doctor, startDate, n = 5) => {
+  const slots = [];
+  let currentDate = new Date(startDate);
+  const now = new Date();
 
+  for (let i = 0; i < 30 && slots.length < n; i++) {
+    const year = currentDate.getFullYear();
+    const month = String(currentDate.getMonth() + 1).padStart(2, "0");
+    const day = String(currentDate.getDate()).padStart(2, "0");
+    const dateStr = `${year}-${month}-${day}`;
+
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const dayName = days[currentDate.getDay()];
+
+    if (doctor.blackoutDates.includes(dateStr)) {
+      throw new ApiError(400, "Doctor on Holiday");
+    }
+
+    if (!doctor.blackoutDates.includes(dateStr)) {
+      const windows = doctor.weeklyAvailability[dayName] || [];
+      const sortedWindows = [...windows].sort((a, b) =>
+        a.start.localeCompare(b.start),
+      );
+
+      for (const window of sortedWindows) {
+        let [startH, startM] = window.start.split(":").map(Number);
+        let [endH, endM] = window.end.split(":").map(Number);
+
+        let currentTotalM = startH * 60 + startM;
+        const endTotalM = endH * 60 + endM;
+
+        while (
+          currentTotalM + doctor.slotDurationMin <= endTotalM &&
+          slots.length < n
+        ) {
+          const h = Math.floor(currentTotalM / 60);
+          const m = currentTotalM % 60;
+          const slotTimeStr = `${h.toString().padStart(2, "0")}:${m.toString().padStart(2, "0")}`;
+
+          const endM = currentTotalM + doctor.slotDurationMin;
+          const endH = Math.floor(endM / 60);
+          const endM_ = endM % 60;
+          const endTimeStr = `${endH.toString().padStart(2, "0")}:${endM_.toString().padStart(2, "0")}`;
+
+          const slotDateTime = new Date(
+            year,
+            currentDate.getMonth(),
+            currentDate.getDate(),
+            h,
+            m,
+            0,
+            0,
+          );
+
+          if (slotDateTime > now) {
+            slots.push({
+              date: dateStr,
+              time: slotTimeStr,
+              endTime: endTimeStr,
+            });
+          }
+          currentTotalM += doctor.slotDurationMin;
+        }
+      }
+    }
+    currentDate.setDate(currentDate.getDate() + 1);
+    currentDate.setHours(0, 0, 0, 0);
+  }
+  return slots;
+};
+
+export const searchDoctor = asyncHandler(async (req, res) => {
+  const { specialty, location, date, n = 5 } = req.query;
+
+  const query = { isAcceptingAppointments: true };
+
+  if (specialty) {
+    query.specialty = { $regex: specialty, $options: "i" };
+  }
+
+  if (location) {
+    query.location = { $regex: location, $options: "i" };
+  }
+
+  const doctors = await doctorProfileModel
+    .find(query)
+    .populate("userId", "username email");
+
+  const searchDate = date ? new Date(`${date}T00:00:00`) : new Date();
+  if (isNaN(searchDate.getTime())) {
+    throw new ApiError(400, "Invalid date format. Use YYYY-MM-DD");
+  }
+
+  const results = doctors.map((doctor) => {
+    const nextSlots = getNextOpenSlots(doctor, searchDate, parseInt(n));
+    return {
+      ...doctor.toObject(),
+      nextSlots,
+    };
+  });
+
+  let filteredResults = results;
+  if (date) {
+    filteredResults = results.filter((d) =>
+      d.nextSlots.some((s) => s.date === date),
+    );
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, filteredResults, "Doctors fetched successfully"),
+    );
+});

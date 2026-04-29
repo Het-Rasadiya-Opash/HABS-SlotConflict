@@ -7,9 +7,11 @@ import {
   getMyProfile,
   updateDoctorProfile,
   updateBlackoutDates,
+  searchDoctor,
 } from "../controllers/doctorProfile.controller.js";
 const router = express.Router();
 
+router.get("/search", searchDoctor);
 router.get("/", authMiddleware, authorizeRole("Doctor"), getMyProfile);
 
 router.post(
