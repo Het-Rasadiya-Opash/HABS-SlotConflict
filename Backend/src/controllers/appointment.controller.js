@@ -177,3 +177,73 @@ export const bookAppointment = asyncHandler(async (req, res) => {
     ),
   );
 });
+
+export const getAppointmentByPatient = asyncHandler(async (req, res) => {
+  const patientId = req.user?._id;
+
+  if (!patientId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  if (req.user.role !== "Patient") {
+    throw new ApiError(403, "Only patients can view their appointments");
+  }
+
+  const appointments = await appointmentModel
+    .find({ patientId })
+    .sort({ slotStartUTC: 1 })
+    .populate({
+      path: "doctorId",
+      select: "specialty consultationFee location slotDurationMin",
+      populate: {
+        path: "userId",
+        select: "username email",
+      },
+    })
+    .populate({
+      path: "patientId",
+      select: "username email",
+    })
+    .lean();
+
+  const shaped = appointments.map((appt) => ({
+    _id: appt._id,
+    bookingId: appt.bookingId,
+    status: appt.status,
+
+    slot: {
+      startUTC: appt.slotStartUTC,
+      endUTC: appt.slotEndUTC,
+    },
+
+    doctor: appt.doctorId
+      ? {
+          id: appt.doctorId._id,
+          name: appt.doctorId.userId?.username ?? null,
+          email: appt.doctorId.userId?.email ?? null,
+          specialty: appt.doctorId.specialty,
+          consultationFee: appt.doctorId.consultationFee,
+          location: appt.doctorId.location,
+          slotDurationMin: appt.doctorId.slotDurationMin,
+        }
+      : null,
+
+    patient: appt.patientId
+      ? {
+          id: appt.patientId._id,
+          username: appt.patientId.username,
+          email: appt.patientId.email,
+        }
+      : null,
+
+    reason: appt.reason,
+    notes: appt.notes ?? null,
+    bookedAt: appt.createdAt,
+    cancelledAt: appt.cancelledAt ?? null,
+    cancellationReason: appt.cancellationReason ?? null,
+  }));
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, shaped, "Fetched patient appointments"));
+});
