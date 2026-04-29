@@ -110,14 +110,6 @@ const doctorProfileSchema = new mongoose.Schema(
 
 doctorProfileSchema.index({ specialty: 1, location: 1 });
 
-doctorProfileSchema.methods.isBlackedOut = function (dateStr) {
-  return this.blackoutDates.includes(dateStr);
-};
-
-doctorProfileSchema.methods.getTimesForDay = function (dayAbbr) {
-  return this.weeklyAvailability[dayAbbr] || [];
-};
-
 const doctorProfileModel = mongoose.model("DoctorProfile", doctorProfileSchema);
 
 export default doctorProfileModel;
