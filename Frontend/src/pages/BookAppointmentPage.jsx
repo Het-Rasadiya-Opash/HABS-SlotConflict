@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import { DateTime } from "luxon";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setLoading,
@@ -66,7 +67,7 @@ const BookAppointmentPage = () => {
         slotEndUTC: selectedSlot.slotEndUTC,
         reason: reason.trim(),
         ...(notes.trim() ? { notes: notes.trim() } : {}),
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezone: DateTime.local().zoneName,
       };
 
       const response = await apiRequest.post("/appointment/book", payload);
@@ -172,12 +173,12 @@ const BookAppointmentPage = () => {
             <SummaryChip
               icon={<Calendar className="h-4 w-4" />}
               label="Date"
-              value={slot.date}
+              value={DateTime.fromISO(slot.slotStartUTC).toLocal().toFormat("yyyy-MM-dd")}
             />
             <SummaryChip
               icon={<Clock className="h-4 w-4" />}
               label="Time"
-              value={`${slot.time} – ${slot.endTime}`}
+              value={`${DateTime.fromISO(slot.slotStartUTC).toLocal().toFormat("hh:mm a")} – ${DateTime.fromISO(slot.slotEndUTC).toLocal().toFormat("hh:mm a")}`}
             />
             <SummaryChip
               icon={<MapPin className="h-4 w-4" />}

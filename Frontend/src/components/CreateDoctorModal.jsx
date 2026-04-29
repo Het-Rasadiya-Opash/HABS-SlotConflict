@@ -13,6 +13,7 @@ import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setError, setLoading, setProfile } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
+import { DateTime } from "luxon";
 
 const CreateDoctorModal = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
@@ -26,6 +27,7 @@ const CreateDoctorModal = ({ isOpen, onClose }) => {
     location: "",
     slotDurationMin: 30,
     maxPatientsPerSlot: 1,
+    timezone: DateTime.local().zoneName,
   });
 
   const [qualificationInput, setQualificationInput] = useState("");

@@ -1,5 +1,6 @@
 import { AlertCircle, Calendar, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { DateTime } from "luxon";
 import { useDispatch, useSelector } from "react-redux";
 import {
   setBlackoutDates,
@@ -98,7 +99,7 @@ const BlackoutModal = ({ isOpen, onClose, currentDates }) => {
                 type="date"
                 value={newBlackoutDate}
                 onChange={(e) => setNewBlackoutDate(e.target.value)}
-                min={new Date().toISOString().split("T")[0]}
+                min={DateTime.now().toISODate()}
                 className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
               />
               <button
@@ -123,12 +124,7 @@ const BlackoutModal = ({ isOpen, onClose, currentDates }) => {
                     className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100 group hover:border-slate-200 transition-all"
                   >
                     <span className="text-sm font-semibold text-slate-700">
-                      {new Date(date).toLocaleDateString("en-US", {
-                        weekday: "short",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
+                      {DateTime.fromISO(date).toFormat("ccc, MMMM d, yyyy")}
                     </span>
                     <button
                       onClick={() => handleRemoveBlackoutDate(date)}

@@ -1,5 +1,6 @@
 import { Ban, Calendar, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
+import { DateTime } from "luxon";
 import WeeklyAvailabilityModel from "./WeeklyAvailabilityModel";
 
 const WeeklyAvailabilityData = ({ profile }) => {
@@ -71,18 +72,8 @@ const WeeklyAvailabilityData = ({ profile }) => {
                 const daySlots = calculateSlots(windows, slotDuration);
                 const isActive = daySlots.length > 0;
 
-                const d = new Date();
-                const currentDay = d.getDay();
-                const diff =
-                  d.getDate() -
-                  currentDay +
-                  (currentDay === 0 ? -6 : 1) +
-                  index;
-                const dateObj = new Date(new Date().setDate(diff));
-                const dateStr = dateObj.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                });
+                const currentDayDate = DateTime.local().startOf("week").plus({ days: index });
+                const dateStr = currentDayDate.toFormat("MMM d");
 
                 return (
                   <div
@@ -105,16 +96,7 @@ const WeeklyAvailabilityData = ({ profile }) => {
                             key={i}
                             className={`py-2 px-1 rounded-xl text-[10px] font-bold text-center transition-all cursor-default
                                       ${
-                                        day ===
-                                          [
-                                            "Sun",
-                                            "Mon",
-                                            "Tue",
-                                            "Wed",
-                                            "Thu",
-                                            "Fri",
-                                            "Sat",
-                                          ][new Date().getDay()] && i === 0
+                                        day === DateTime.local().toFormat("ccc") && i === 0
                                           ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
                                           : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                                       }`}

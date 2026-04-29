@@ -267,15 +267,16 @@ export const getAppointmentByDoctor = asyncHandler(async (req, res) => {
 
   const filter = { doctorId: doctorProfile._id };
 
-  const targetDate = date || DateTime.utc().toFormat("yyyy-MM-dd");
-
-  const startOfDay = DateTime.fromISO(targetDate, { zone: "utc" })
-    .startOf("day")
-    .toJSDate();
-  const endOfDay = DateTime.fromISO(targetDate, { zone: "utc" })
-    .endOf("day")
-    .toJSDate();
-  filter.slotStartUTC = { $gte: startOfDay, $lte: endOfDay };
+  if (date) {
+    const tz = doctorProfile.timezone || "utc";
+    const startOfDay = DateTime.fromISO(date, { zone: tz })
+      .startOf("day")
+      .toJSDate();
+    const endOfDay = DateTime.fromISO(date, { zone: tz })
+      .endOf("day")
+      .toJSDate();
+    filter.slotStartUTC = { $gte: startOfDay, $lte: endOfDay };
+  }
 
   const appointments = await appointmentModel
     .find(filter)

@@ -14,6 +14,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setError, setLoading, setProfile } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
+import { DateTime } from "luxon";
 
 const EditDoctorProfileModal = ({ isOpen, onClose, profile }) => {
   const dispatch = useDispatch();
@@ -28,6 +29,7 @@ const EditDoctorProfileModal = ({ isOpen, onClose, profile }) => {
     slotDurationMin: 30,
     maxPatientsPerSlot: 1,
     isAcceptingAppointments: true,
+    timezone: DateTime.local().zoneName,
   });
 
   const [qualificationInput, setQualificationInput] = useState("");
@@ -43,6 +45,7 @@ const EditDoctorProfileModal = ({ isOpen, onClose, profile }) => {
         slotDurationMin: profile.slotDurationMin || 30,
         maxPatientsPerSlot: profile.maxPatientsPerSlot || 1,
         isAcceptingAppointments: profile.isAcceptingAppointments !== false,
+        timezone: profile.timezone || DateTime.local().zoneName,
       });
     }
   }, [profile]);

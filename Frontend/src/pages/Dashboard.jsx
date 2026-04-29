@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import {
   AlertCircle,
   CheckCircle2,
@@ -75,11 +76,7 @@ const Dashboard = () => {
             </span>
             <div className="w-px h-4 bg-slate-200" />
             <span className="px-3 py-1.5 text-slate-500 text-xs font-medium">
-              {new Date().toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
+              {DateTime.local().toFormat("MMM d, yyyy")}
             </span>
           </div>
         </header>

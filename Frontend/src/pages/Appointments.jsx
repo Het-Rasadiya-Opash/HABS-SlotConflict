@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { DateTime } from "luxon";
 import {
   Calendar,
   Clock,
@@ -25,18 +26,9 @@ import {
 
 const formatDateTime = (isoString) => {
   if (!isoString) return { date: "—", time: "—" };
-  const d = new Date(isoString);
-  const date = d.toLocaleDateString("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-  const time = d.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
+  const d = DateTime.fromISO(isoString, { zone: "utc" }).toLocal();
+  const date = d.toFormat("ccc, d MMMM yyyy");
+  const time = d.toFormat("hh:mm a");
   return { date, time };
 };
 
@@ -238,13 +230,19 @@ const Appointments = () => {
   const { bookingResult, loading, error } = useSelector(
     (state) => state.appointment,
   );
+  const currentUser = useSelector((state) => state.users.currentUser);
 
   useEffect(() => {
-    const fetchPatientAppointments = async () => {
+    const fetchAppointments = async () => {
+      if (!currentUser) return;
       dispatch(setLoading(true));
       dispatch(clearError());
       try {
-        const res = await apiRequest.get("/appointment/patient");
+        const endpoint =
+          currentUser.role === "Doctor"
+            ? "/appointment/doctor"
+            : "/appointment/patient";
+        const res = await apiRequest.get(endpoint);
         dispatch(setBookingResult(res.data.data));
       } catch (err) {
         dispatch(
@@ -254,8 +252,8 @@ const Appointments = () => {
         );
       }
     };
-    fetchPatientAppointments();
-  }, [dispatch]);
+    fetchAppointments();
+  }, [dispatch, currentUser]);
 
   const appointments = Array.isArray(bookingResult)
     ? bookingResult

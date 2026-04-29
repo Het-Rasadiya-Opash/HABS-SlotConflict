@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import { DateTime } from "luxon";
 import { useDispatch } from "react-redux";
 import { setBookingContext } from "../features/appointmentSlice";
 import apiRequest from "../utils/apiRequest";
@@ -224,8 +225,9 @@ const Home = () => {
                       {doctor.nextSlots && doctor.nextSlots.length > 0 ? (
                         Object.entries(
                           doctor.nextSlots.reduce((acc, slot) => {
-                            if (!acc[slot.date]) acc[slot.date] = [];
-                            acc[slot.date].push(slot);
+                            const localDate = DateTime.fromISO(slot.slotStartUTC).toLocal().toFormat("yyyy-MM-dd");
+                            if (!acc[localDate]) acc[localDate] = [];
+                            acc[localDate].push(slot);
                             return acc;
                           }, {}),
                         ).map(([date, daySlots]) => (
@@ -249,7 +251,7 @@ const Home = () => {
                                         : "bg-[#F3F6FF] text-[#5D5FEF] border-[#E8EFFF] hover:bg-[#E8EFFF]"
                                     }`}
                                   >
-                                    {slot.time} - {slot.endTime}
+                                    {DateTime.fromISO(slot.slotStartUTC).toLocal().toFormat("hh:mm a")} - {DateTime.fromISO(slot.slotEndUTC).toLocal().toFormat("hh:mm a")}
                                   </div>
                                 );
                               })}

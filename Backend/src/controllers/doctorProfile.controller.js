@@ -2,6 +2,7 @@ import doctorProfileModel from "../models/doctorProfile.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { DateTime } from "luxon";
 
 export const createDoctorProfile = asyncHandler(async (req, res) => {
   const {
@@ -13,6 +14,7 @@ export const createDoctorProfile = asyncHandler(async (req, res) => {
     slotDurationMin,
     maxPatientsPerSlot,
     isAcceptingAppointments,
+    timezone,
   } = req.body;
 
   if (!specialty || !location || !slotDurationMin) {
@@ -39,6 +41,7 @@ export const createDoctorProfile = asyncHandler(async (req, res) => {
     slotDurationMin,
     maxPatientsPerSlot,
     isAcceptingAppointments,
+    timezone: timezone || "UTC",
   });
 
   return res
@@ -62,6 +65,7 @@ export const updateDoctorProfile = asyncHandler(async (req, res) => {
     slotDurationMin,
     maxPatientsPerSlot,
     isAcceptingAppointments,
+    timezone,
   } = req.body;
 
   const doctorProfile = await doctorProfileModel.findOneAndUpdate(
@@ -76,6 +80,7 @@ export const updateDoctorProfile = asyncHandler(async (req, res) => {
         slotDurationMin,
         maxPatientsPerSlot,
         isAcceptingAppointments,
+        timezone,
       },
     },
     { new: true, runValidators: true },
@@ -183,31 +188,24 @@ export const getMyProfile = asyncHandler(async (req, res) => {
 
 const getNextOpenSlots = (doctor, startDate, n = 5) => {
   const slots = [];
+  const now = DateTime.utc();
+  const tz = doctor.timezone || "utc";
 
-  // Work entirely in UTC so that HH:mm in slotStartUTC/slotEndUTC
-  // matches the doctor's availability window strings (also UTC-based).
-  const nowMs = Date.now();
+  let startLocal = DateTime.fromJSDate(startDate, { zone: tz }).startOf("day");
+  if (startLocal < now.setZone(tz).startOf("day")) {
+    startLocal = now.setZone(tz).startOf("day");
+  }
 
-  // Snap startDate to midnight UTC
-  const start = new Date(startDate);
-  let curMs = Date.UTC(
-    start.getUTCFullYear(),
-    start.getUTCMonth(),
-    start.getUTCDate(),
-  );
+  const DAY_MAP = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-  const UTC_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  let curLocal = startLocal;
 
   for (let i = 0; i < 30 && slots.length < n; i++) {
-    const d = new Date(curMs);
-    const year  = d.getUTCFullYear();
-    const month = d.getUTCMonth();
-    const date  = d.getUTCDate();
-    const dateStr = `${year}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(date).padStart(2, "0")}`;
-    const dayName = UTC_DAYS[d.getUTCDay()];
+    const dateStr = curLocal.toFormat("yyyy-MM-dd");
+    const dayName = DAY_MAP[curLocal.weekday - 1];
 
-    if (!doctor.blackoutDates.includes(dateStr)) {
-      const windows = doctor.weeklyAvailability[dayName] || [];
+    if (!doctor.blackoutDates?.includes(dateStr)) {
+      const windows = doctor.weeklyAvailability?.[dayName] || [];
       const sortedWindows = [...windows].sort((a, b) =>
         a.start.localeCompare(b.start),
       );
@@ -225,23 +223,20 @@ const getNextOpenSlots = (doctor, startDate, n = 5) => {
         ) {
           const h = Math.floor(currentTotalM / 60);
           const m = currentTotalM % 60;
-          const slotTimeStr = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 
-          const endTotalMSlot = currentTotalM + doctor.slotDurationMin;
-          const endH2 = Math.floor(endTotalMSlot / 60);
-          const endM2 = endTotalMSlot % 60;
-          const endTimeStr = `${String(endH2).padStart(2, "0")}:${String(endM2).padStart(2, "0")}`;
+          const slotStartLocal = curLocal.set({ hour: h, minute: m });
+          const slotEndLocal = slotStartLocal.plus({ minutes: doctor.slotDurationMin });
 
-          const slotStartMs = Date.UTC(year, month, date, h, m);
-          const slotEndMs   = slotStartMs + doctor.slotDurationMin * 60 * 1000;
+          const slotStartUTC = slotStartLocal.toUTC();
+          const slotEndUTC = slotEndLocal.toUTC();
 
-          if (slotStartMs > nowMs) {
+          if (slotStartUTC > now) {
             slots.push({
               date: dateStr,
-              time: slotTimeStr,
-              endTime: endTimeStr,
-              slotStartUTC: new Date(slotStartMs).toISOString(),
-              slotEndUTC:   new Date(slotEndMs).toISOString(),
+              time: slotStartLocal.toFormat("HH:mm"),
+              endTime: slotEndLocal.toFormat("HH:mm"),
+              slotStartUTC: slotStartUTC.toISO(),
+              slotEndUTC: slotEndUTC.toISO(),
             });
           }
 
@@ -250,7 +245,7 @@ const getNextOpenSlots = (doctor, startDate, n = 5) => {
       }
     }
 
-    curMs += 24 * 60 * 60 * 1000;
+    curLocal = curLocal.plus({ days: 1 });
   }
 
   return slots;
