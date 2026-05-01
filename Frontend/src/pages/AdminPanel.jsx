@@ -5,6 +5,7 @@ import {
   Building2,
   CalendarRange,
   ChevronDown,
+  CircleCheckBig,
   Filter,
   Loader2,
   RefreshCw,
@@ -124,7 +125,7 @@ const AdminPanel = () => {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-              Admin Control Panel
+              Admin Panel
             </h1>
           </div>
           <div className="flex items-center gap-3">
@@ -143,17 +144,24 @@ const AdminPanel = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
+            icon={Users}
+            label="Doctors Listed"
+            value={loading ? "—" : (data?.doctorCount ?? 0)}
+            color="bg-emerald-500"
+          />
+          <StatCard
             icon={BarChart3}
             label="Total Appointments"
             value={loading ? "—" : (summary.total ?? 0)}
             color="bg-indigo-500"
             sub="Across all doctors"
           />
+
           <StatCard
-            icon={Users}
-            label="Doctors Listed"
-            value={loading ? "—" : (data?.doctorCount ?? 0)}
-            color="bg-emerald-500"
+            icon={Settings}
+            label="Pending Appointment"
+            value={loading ? "—" : (summary.pending ?? 0)}
+            color="bg-amber-500"
           />
           <StatCard
             icon={Building2}
@@ -162,10 +170,10 @@ const AdminPanel = () => {
             color="bg-sky-500"
           />
           <StatCard
-            icon={Settings}
-            label="Pending Appointment"
-            value={loading ? "—" : (summary.pending ?? 0)}
-            color="bg-amber-500"
+            icon={CircleCheckBig}
+            label="Confirmed"
+            value={loading ? "—" : (summary.completed ?? 0)}
+            color="bg-green-500"
           />
         </div>
 

@@ -72,7 +72,7 @@ const Navbar = () => {
                       Dashboard
                     </Link>
                     <Link
-                      to="/doctor-appointment"
+                      to="/today-doctor-appointment"
                       className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
                     >
                       <CalendarClock className="w-4 h-4" />
@@ -173,7 +173,7 @@ const Navbar = () => {
                     Dashboard
                   </Link>
                   <Link
-                    to="/doctor-appointment"
+                    to="/today-doctor-appointment"
                     onClick={() => setIsOpen(false)}
                     className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
                   >

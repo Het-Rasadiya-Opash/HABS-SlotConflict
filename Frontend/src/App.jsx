@@ -12,7 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Appointments from "./pages/Appointments";
 import AdminPanel from "./pages/AdminPanel";
 import BookAppointmentPage from "./pages/BookAppointmentPage";
-import DoctorAppointment from "./pages/DoctorAppointment";
+import TodayDoctorAppointment from "./pages/TodayDoctorAppointment";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -41,7 +41,10 @@ const App = () => {
 
           <Route element={<ProtectedRoute allowedRoles={["Doctor"]} />}>
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/doctor-appointment" element={<DoctorAppointment/>}/>
+            <Route
+              path="/today-doctor-appointment"
+              element={<TodayDoctorAppointment />}
+            />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={["Patient"]} />}>

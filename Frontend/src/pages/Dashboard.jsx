@@ -7,7 +7,7 @@ import {
   IndianRupee,
   MapPin,
   User,
-  Users
+  Users,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -19,6 +19,7 @@ import InfoItem from "../components/InfoItem";
 import WeeklyAvailabilityData from "../components/WeeklyAvailabilityData";
 import { setError, setLoading, setProfile } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
+import DoctorShowAllAppointments from "../components/DoctorShowAllAppointments";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -93,92 +94,94 @@ const Dashboard = () => {
             onOpenCreateModal={() => setIsCreateModalOpen(true)}
           />
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-8">
-              <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 relative overflow-hidden group">
-                <div className="relative flex flex-col md:flex-row gap-8 items-start">
-                  <div className="w-24 h-24 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
-                    <User className="w-12 h-12" />
-                  </div>
-
-                  <div className="flex-1 space-y-4">
-                    <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <h2 className="text-2xl font-bold text-slate-900">
-                          {profile.specialty}
-                        </h2>
-                        <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider">
-                          {profile.experienceYears} Years Exp.
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => setIsEditModalOpen(true)}
-                        className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all group"
-                        title="Edit Profile"
-                      >
-                        <Edit3 className="w-5 h-5 transition-transform group-hover:scale-110" />
-                      </button>
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-8">
+                <section className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-slate-100 relative overflow-hidden group">
+                  <div className="relative flex flex-col md:flex-row gap-8 items-start">
+                    <div className="w-24 h-24 bg-indigo-500 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                      <User className="w-12 h-12" />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <InfoItem
-                        icon={MapPin}
-                        label="Location"
-                        value={profile.location}
-                      />
-                      <InfoItem
-                        icon={IndianRupee}
-                        label="Consultation Fee"
-                        value={`₹${profile.consultationFee}`}
-                      />
-                      <InfoItem
-                        icon={Clock}
-                        label="Slot Duration"
-                        value={`${profile.slotDurationMin} Minutes`}
-                      />
-                      <InfoItem
-                        icon={Users}
-                        label="Max Patients/Slot"
-                        value={profile.maxPatientsPerSlot}
-                      />
-                      <InfoItem
-                        icon={CheckCircle2}
-                        label="Accepting Appointments"
-                        value={
-                          <span
-                            className={
-                              profile.isAcceptingAppointments !== false
-                                ? "text-emerald-600"
-                                : "text-rose-600"
-                            }
-                          >
-                            {profile.isAcceptingAppointments !== false
-                              ? "YES"
-                              : "NO"}
+                    <div className="flex-1 space-y-4">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <h2 className="text-2xl font-bold text-slate-900">
+                            {profile.specialty}
+                          </h2>
+                          <span className="px-3 py-1 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-full uppercase tracking-wider">
+                            {profile.experienceYears} Years Exp.
                           </span>
-                        }
-                      />
-                    </div>
-
-                    <div className="pt-4 flex flex-wrap gap-2">
-                      {profile.qualifications?.map((q, i) => (
-                        <span
-                          key={i}
-                          className="px-3 py-1.5 bg-slate-100 text-slate-600 text-xs font-medium rounded-lg"
+                        </div>
+                        <button
+                          onClick={() => setIsEditModalOpen(true)}
+                          className="p-2.5 bg-slate-50 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all group"
+                          title="Edit Profile"
                         >
-                          {q}
-                        </span>
-                      ))}
+                          <Edit3 className="w-5 h-5 transition-transform group-hover:scale-110" />
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InfoItem
+                          icon={MapPin}
+                          label="Location"
+                          value={profile.location}
+                        />
+                        <InfoItem
+                          icon={IndianRupee}
+                          label="Consultation Fee"
+                          value={`₹${profile.consultationFee}`}
+                        />
+                        <InfoItem
+                          icon={Clock}
+                          label="Slot Duration"
+                          value={`${profile.slotDurationMin} Minutes`}
+                        />
+                        <InfoItem
+                          icon={Users}
+                          label="Max Patients/Slot"
+                          value={profile.maxPatientsPerSlot}
+                        />
+                        <InfoItem
+                          icon={CheckCircle2}
+                          label="Accepting Appointments"
+                          value={
+                            <span
+                              className={
+                                profile.isAcceptingAppointments !== false
+                                  ? "text-emerald-600"
+                                  : "text-rose-600"
+                              }
+                            >
+                              {profile.isAcceptingAppointments !== false
+                                ? "YES"
+                                : "NO"}
+                            </span>
+                          }
+                        />
+                      </div>
+
+                      <div className="pt-4 flex flex-wrap gap-2">
+                        {profile.qualifications?.map((q, i) => (
+                          <span
+                            key={i}
+                            className="px-3 py-1.5 bg-slate-100 text-slate-600 text-xs font-medium rounded-lg"
+                          >
+                            {q}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              </div>
 
-              <WeeklyAvailabilityData profile={profile} />
+              <BlackoutData profile={profile} />
             </div>
-
-            <BlackoutData profile={profile} />
-          </div>
+            <WeeklyAvailabilityData profile={profile} />
+            <DoctorShowAllAppointments />
+          </>
         )}
 
         <CreateDoctorModal

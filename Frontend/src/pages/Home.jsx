@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { DateTime } from "luxon";
 import { useDispatch } from "react-redux";
 import { setBookingContext } from "../features/appointmentSlice";
 import apiRequest from "../utils/apiRequest";
-import { groupSlotsByISTDate, formatDateKeyIST, formatTimeIST } from "../utils/dateUtils";
+import {
+  groupSlotsByISTDate,
+  formatDateKeyIST,
+  formatTimeIST,
+} from "../utils/dateUtils";
 import {
   Search,
   MapPin,
@@ -71,6 +75,10 @@ const Home = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    handleSearch();
+  }, []);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -253,7 +261,8 @@ const Home = () => {
                                         : "bg-[#F3F6FF] text-[#5D5FEF] border-[#E8EFFF] hover:bg-[#E8EFFF]"
                                     }`}
                                   >
-                                    {formatTimeIST(slot.slotStartUTC)} - {formatTimeIST(slot.slotEndUTC)}
+                                    {formatTimeIST(slot.slotStartUTC)} -{" "}
+                                    {formatTimeIST(slot.slotEndUTC)}
                                   </div>
                                 );
                               })}

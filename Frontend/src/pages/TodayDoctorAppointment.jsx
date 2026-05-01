@@ -209,7 +209,7 @@ const EmptyState = () => (
   </div>
 );
 
-const DoctorAppointment = () => {
+const TodayDoctorAppointment = () => {
   const dispatch = useDispatch();
   const { bookingResult, loading, error } = useSelector(
     (state) => state.appointment,
@@ -287,4 +287,4 @@ const DoctorAppointment = () => {
   );
 };
 
-export default DoctorAppointment;
+export default TodayDoctorAppointment;

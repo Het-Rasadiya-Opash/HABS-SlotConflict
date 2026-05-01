@@ -8,9 +8,17 @@ import {
   cancelAppointment,
   rescheduleAppointment,
   doctorUpdateAppointmentStatus,
+  AllAppointmentsOfDoctor,
 } from "../controllers/appointment.controller.js";
 
 const router = express.Router();
+
+router.get(
+  "/",
+  authMiddleware,
+  authorizeRole("Doctor"),
+  AllAppointmentsOfDoctor,
+);
 
 router.get(
   "/patient",
