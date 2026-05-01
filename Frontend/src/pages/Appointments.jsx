@@ -219,9 +219,6 @@ const EmptyState = () => (
     <h3 className="text-xl font-bold text-slate-900 mb-2">
       No Appointments Yet
     </h3>
-    <p className="text-slate-400 max-w-xs">
-      You haven't booked any appointments. Search for a doctor to get started.
-    </p>
   </div>
 );
 
@@ -238,11 +235,7 @@ const Appointments = () => {
       dispatch(setLoading(true));
       dispatch(clearError());
       try {
-        const endpoint =
-          currentUser.role === "Doctor"
-            ? "/appointment/doctor"
-            : "/appointment/patient";
-        const res = await apiRequest.get(endpoint);
+        const res = await apiRequest.get("/appointment/patient");
         dispatch(setBookingResult(res.data.data));
       } catch (err) {
         dispatch(

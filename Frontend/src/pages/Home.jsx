@@ -74,7 +74,8 @@ const Home = () => {
       } else {
         setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "error" }));
         setTimeout(
-          () => setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "idle" })),
+          () =>
+            setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "idle" })),
           3000,
         );
       }
@@ -112,9 +113,7 @@ const Home = () => {
           waitlistMap[`${item.doctorId}-${item.slotStartUTC}`] = "joined";
         });
         setWaitlistStatus((prev) => ({ ...prev, ...waitlistMap }));
-      } catch (error) {
-        // user might not be logged in or not a patient, ignore
-      }
+      } catch (error) {}
     };
 
     handleSearch();

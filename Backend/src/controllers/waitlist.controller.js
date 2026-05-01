@@ -191,18 +191,60 @@ export const getMyWaitlist = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Authentication required");
   }
 
-  const waitlists = await waitlistModel.find({
-    patientId,
-    status: { $in: ["WAITING", "NOTIFIED"] },
-  }).lean();
+  const waitlists = await waitlistModel
+    .find({
+      patientId,
+      status: { $in: ["WAITING", "NOTIFIED"] },
+    })
+    .lean();
 
   return res
     .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        waitlists,
-        "Waitlist fetched successfully",
-      ),
+    .json(new ApiResponse(200, waitlists, "Waitlist fetched successfully"));
+});
+
+export const leaveWaitlist = asyncHandler(async (req, res) => {
+  const { waitlistId } = req.params;
+  const patientId = req.user?._id;
+
+  if (!patientId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const waitlistEntry = await waitlistModel.findOne({
+    waitlistId,
+    patientId,
+  });
+
+  if (!waitlistEntry) {
+    throw new ApiError(404, "Waitlist entry not found");
+  }
+
+  if (!["WAITING", "NOTIFIED"].includes(waitlistEntry.status)) {
+    throw new ApiError(
+      400,
+      `Cannot leave waitlist. Current status is ${waitlistEntry.status}`,
     );
+  }
+
+  console.log(waitlistEntry.position);
+
+  await waitlistModel.updateMany(
+    {
+      doctorId: waitlistEntry.doctorId,
+      slotStartUTC: waitlistEntry.slotStartUTC,
+      position: waitlistEntry.position,
+      status: { $in: ["WAITING", "NOTIFIED"] },
+    },
+    {
+      $inc: { position: -1 },
+    },
+  );
+
+    waitlistEntry.status = "SKIPPED";
+    await waitlistEntry.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Successfully left the waitlist"));
 });
