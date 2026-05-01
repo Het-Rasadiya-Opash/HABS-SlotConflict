@@ -4,6 +4,7 @@ import { DateTime } from "luxon";
 import { useDispatch } from "react-redux";
 import { setBookingContext } from "../features/appointmentSlice";
 import apiRequest from "../utils/apiRequest";
+import { groupSlotsByISTDate, formatDateKeyIST, formatTimeIST } from "../utils/dateUtils";
 import {
   Search,
   MapPin,
@@ -225,15 +226,16 @@ const Home = () => {
                       {doctor.nextSlots && doctor.nextSlots.length > 0 ? (
                         Object.entries(
                           doctor.nextSlots.reduce((acc, slot) => {
-                            const localDate = DateTime.fromISO(slot.slotStartUTC).toLocal().toFormat("yyyy-MM-dd");
-                            if (!acc[localDate]) acc[localDate] = [];
-                            acc[localDate].push(slot);
+                            const localDate = groupSlotsByISTDate([slot]);
+                            const dateKey = Object.keys(localDate)[0];
+                            if (!acc[dateKey]) acc[dateKey] = [];
+                            acc[dateKey].push(slot);
                             return acc;
                           }, {}),
                         ).map(([date, daySlots]) => (
                           <div key={date}>
                             <p className="text-sm font-bold text-[#111827] mb-3">
-                              {DateTime.fromISO(date).toFormat("ccc, MMM d")}
+                              {formatDateKeyIST(date)}
                             </p>
                             <div className="flex flex-wrap gap-3">
                               {daySlots.map((slot, index) => {
@@ -251,7 +253,7 @@ const Home = () => {
                                         : "bg-[#F3F6FF] text-[#5D5FEF] border-[#E8EFFF] hover:bg-[#E8EFFF]"
                                     }`}
                                   >
-                                    {DateTime.fromISO(slot.slotStartUTC).toLocal().toFormat("hh:mm a")} - {DateTime.fromISO(slot.slotEndUTC).toLocal().toFormat("hh:mm a")}
+                                    {formatTimeIST(slot.slotStartUTC)} - {formatTimeIST(slot.slotEndUTC)}
                                   </div>
                                 );
                               })}

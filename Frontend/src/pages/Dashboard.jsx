@@ -1,4 +1,4 @@
-import { DateTime } from "luxon";
+import { nowIST } from "../utils/dateUtils";
 import {
   AlertCircle,
   CheckCircle2,
@@ -76,7 +76,7 @@ const Dashboard = () => {
             </span>
             <div className="w-px h-4 bg-slate-200" />
             <span className="px-3 py-1.5 text-slate-500 text-xs font-medium">
-              {DateTime.local().toFormat("MMM d, yyyy")}
+              {nowIST().toFormat("ccc, MMM d, yyyy")}
             </span>
           </div>
         </header>

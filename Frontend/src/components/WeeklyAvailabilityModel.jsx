@@ -1,7 +1,7 @@
 import { AlertCircle, Clock, Plus, Trash2, X, ChevronDown } from "lucide-react";
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch } from "react-redux";
-import { DateTime } from "luxon";
+import { formatHHmmTo12h } from "../utils/dateUtils";
 import { setWeeklyAvailability } from "../features/doctorSlice";
 import apiRequest from "../utils/apiRequest";
 
@@ -24,9 +24,7 @@ const WeeklyAvailabilityModel = ({
         const hh = h.toString().padStart(2, "0");
         const mm = m.toString().padStart(2, "0");
         const value = `${hh}:${mm}`;
-        const label = DateTime.fromObject({ hour: h, minute: m }).toFormat(
-          "hh:mm a",
-        );
+        const label = formatHHmmTo12h(`${hh}:${mm}`);
         options.push({ value, label });
       }
     }

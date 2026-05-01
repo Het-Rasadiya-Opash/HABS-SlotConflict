@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { DateTime } from "luxon";
+import { formatDateIST, formatTimeIST } from "../utils/dateUtils";
 import {
   Calendar,
   Clock,
@@ -26,10 +26,10 @@ import {
 
 const formatDateTime = (isoString) => {
   if (!isoString) return { date: "—", time: "—" };
-  const d = DateTime.fromISO(isoString, { zone: "utc" }).toLocal();
-  const date = d.toFormat("ccc, d MMMM yyyy");
-  const time = d.toFormat("hh:mm a");
-  return { date, time };
+  return {
+    date: formatDateIST(isoString),
+    time: formatTimeIST(isoString),
+  };
 };
 
 const STATUS_MAP = {

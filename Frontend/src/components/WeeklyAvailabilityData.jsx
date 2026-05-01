@@ -1,6 +1,6 @@
 import { Ban, Calendar, ChevronRight } from "lucide-react";
 import React, { useState } from "react";
-import { DateTime } from "luxon";
+import { nowIST, formatHHmmTo12h } from "../utils/dateUtils";
 import WeeklyAvailabilityModel from "./WeeklyAvailabilityModel";
 
 const WeeklyAvailabilityData = ({ profile }) => {
@@ -59,8 +59,8 @@ const WeeklyAvailabilityData = ({ profile }) => {
                         .padStart(2, "0");
                       const nextM_ = (nextM % 60).toString().padStart(2, "0");
 
-                      const formattedStart = DateTime.fromObject({ hour: Number(h), minute: Number(m) }).toFormat("hh:mm a");
-                      const formattedEnd = DateTime.fromObject({ hour: Number(nextH), minute: Number(nextM_) }).toFormat("hh:mm a");
+                      const formattedStart = formatHHmmTo12h(`${h}:${m}`);
+                      const formattedEnd = formatHHmmTo12h(`${nextH}:${nextM_}`);
 
                       allSlots.push({
                         start: formattedStart,
@@ -75,7 +75,7 @@ const WeeklyAvailabilityData = ({ profile }) => {
                 const daySlots = calculateSlots(windows, slotDuration);
                 const isActive = daySlots.length > 0;
 
-                const currentDayDate = DateTime.local().startOf("week").plus({ days: index });
+                const currentDayDate = nowIST().startOf("week").plus({ days: index });
                 const dateStr = currentDayDate.toFormat("MMM d");
 
                 return (
@@ -99,7 +99,7 @@ const WeeklyAvailabilityData = ({ profile }) => {
                             key={i}
                             className={`py-2 px-1 rounded-xl text-[10px] font-bold text-center transition-all cursor-default
                                       ${
-                                        day === DateTime.local().toFormat("ccc") && i === 0
+                                        day === nowIST().toFormat("ccc") && i === 0
                                           ? "bg-indigo-600 text-white shadow-md shadow-indigo-100"
                                           : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                                       }`}

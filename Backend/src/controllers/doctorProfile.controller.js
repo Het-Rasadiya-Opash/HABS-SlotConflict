@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { DateTime } from "luxon";
+import { IST } from "../utils/dateUtils.js";
 
 export const createDoctorProfile = asyncHandler(async (req, res) => {
   const {
@@ -41,7 +42,7 @@ export const createDoctorProfile = asyncHandler(async (req, res) => {
     slotDurationMin,
     maxPatientsPerSlot,
     isAcceptingAppointments,
-    timezone: timezone || "UTC",
+    timezone: timezone || IST,
   });
 
   return res
@@ -189,7 +190,7 @@ export const getMyProfile = asyncHandler(async (req, res) => {
 const getNextOpenSlots = (doctor, startDate, n = 5) => {
   const slots = [];
   const now = DateTime.utc();
-  const tz = doctor.timezone || "utc";
+  const tz = doctor.timezone || IST;
 
   let startLocal = DateTime.fromJSDate(startDate, { zone: tz }).startOf("day");
   if (startLocal < now.setZone(tz).startOf("day")) {

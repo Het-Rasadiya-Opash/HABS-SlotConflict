@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import { DateTime } from "luxon";
+import { IST, formatDateIST, formatTimeIST, formatDateTimeIST, toIST } from "../utils/dateUtils.js";
 
 const appointmentSchema = new mongoose.Schema(
   {
@@ -94,17 +95,14 @@ appointmentSchema.methods.isCancellable = function (minHoursBefore = 4) {
   );
 };
 
-appointmentSchema.methods.toLocalTime = function (ianaTimezone) {
-  const start = DateTime.fromJSDate(this.slotStartUTC, { zone: "utc" }).setZone(
-    ianaTimezone,
-  );
-  const end = DateTime.fromJSDate(this.slotEndUTC, { zone: "utc" }).setZone(
-    ianaTimezone,
-  );
+appointmentSchema.methods.toLocalTime = function (ianaTimezone = IST) {
+  const tz = ianaTimezone || IST;
+  const start = DateTime.fromJSDate(this.slotStartUTC, { zone: "utc" }).setZone(tz);
+  const end = DateTime.fromJSDate(this.slotEndUTC, { zone: "utc" }).setZone(tz);
   return {
     start: start.toISO(),
     end: end.toISO(),
-    displayStart: start.toFormat("dd MMM yyyy, hh:mm a (ZZZZ)"),
+    displayStart: start.toFormat("ccc, MMM d, yyyy, hh:mm a ZZZZ"),
     displayEnd: end.toFormat("hh:mm a"),
   };
 };

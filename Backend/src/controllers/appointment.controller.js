@@ -5,6 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { DateTime } from "luxon";
+import { IST } from "../utils/dateUtils.js";
 
 const DAY_MAP = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -15,7 +16,7 @@ export const bookAppointment = asyncHandler(async (req, res) => {
     slotEndUTC: rawEnd,
     reason,
     notes,
-    timezone = "UTC",
+    timezone = IST,
   } = req.body;
 
   if (!doctorId || !rawStart || !rawEnd || !reason) {
@@ -55,8 +56,12 @@ export const bookAppointment = asyncHandler(async (req, res) => {
     );
   }
 
-  const slotDateStr = slotStart.toFormat("yyyy-MM-dd");
-  const dayKey = DAY_MAP[slotStart.weekday % 7];
+  const doctorTz = doctor.timezone || "utc";
+  const slotStartLocal = slotStart.setZone(doctorTz);
+  const slotEndLocal = slotEnd.setZone(doctorTz);
+
+  const slotDateStr = slotStartLocal.toFormat("yyyy-MM-dd");
+  const dayKey = DAY_MAP[slotStartLocal.weekday % 7];
 
   const windows = doctor.weeklyAvailability?.[dayKey] ?? [];
 
@@ -68,8 +73,8 @@ export const bookAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(409, `The date ${slotDateStr} is blocked by the doctor`);
   }
 
-  const reqStartHHMM = slotStart.toFormat("HH:mm");
-  const reqEndHHMM = slotEnd.toFormat("HH:mm");
+  const reqStartHHMM = slotStartLocal.toFormat("HH:mm");
+  const reqEndHHMM = slotEndLocal.toFormat("HH:mm");
 
   const fitsWindow = windows.some(
     (w) => reqStartHHMM >= w.start && reqEndHHMM <= w.end,
@@ -135,9 +140,9 @@ export const bookAppointment = asyncHandler(async (req, res) => {
 
   let localTime;
   try {
-    localTime = appointment.toLocalTime(timezone);
+    localTime = appointment.toLocalTime(timezone || IST);
   } catch {
-    localTime = appointment.toLocalTime("UTC");
+    localTime = appointment.toLocalTime(IST);
   }
 
   return res.status(201).json(
@@ -267,7 +272,7 @@ export const getAppointmentByDoctor = asyncHandler(async (req, res) => {
 
   const filter = { doctorId: doctorProfile._id };
 
-  const tz = doctorProfile.timezone || "utc";
+  const tz = doctorProfile.timezone || IST;
   const targetDate = date || DateTime.now().setZone(tz).toISODate();
 
   const startOfDay = DateTime.fromISO(targetDate, { zone: tz })
@@ -402,7 +407,7 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
   const {
     newSlotStartUTC: rawStart,
     newSlotEndUTC: rawEnd,
-    timezone = "UTC",
+    timezone = IST,
   } = req.body;
   const userId = req.user?._id;
 
@@ -473,8 +478,12 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
     throw new ApiError(409, " doctor is not accepting appointments ");
   }
 
-  const slotDateStr = slotStart.toFormat("yyyy-MM-dd");
-  const dayKey = DAY_MAP[slotStart.weekday % 7];
+  const doctorTz = doctor.timezone || "utc";
+  const slotStartLocal = slotStart.setZone(doctorTz);
+  const slotEndLocal = slotEnd.setZone(doctorTz);
+
+  const slotDateStr = slotStartLocal.toFormat("yyyy-MM-dd");
+  const dayKey = DAY_MAP[slotStartLocal.weekday % 7];
   const windows = doctor.weeklyAvailability?.[dayKey] ?? [];
 
   if (windows.length === 0) {
@@ -482,11 +491,11 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
   }
 
   if (doctor.blackoutDates?.includes(slotDateStr)) {
-    throw new ApiError(409, `  date ${slotDateStr} is blocked by the doctor`);
+    throw new ApiError(409, `The date ${slotDateStr} is blocked by the doctor`);
   }
 
-  const reqStartHHMM = slotStart.toFormat("HH:mm");
-  const reqEndHHMM = slotEnd.toFormat("HH:mm");
+  const reqStartHHMM = slotStartLocal.toFormat("HH:mm");
+  const reqEndHHMM = slotEndLocal.toFormat("HH:mm");
   const fitsWindow = windows.some(
     (w) => reqStartHHMM >= w.start && reqEndHHMM <= w.end,
   );
@@ -540,9 +549,9 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
 
   let localTime;
   try {
-    localTime = newAppointment.toLocalTime(timezone);
+    localTime = newAppointment.toLocalTime(timezone || IST);
   } catch {
-    localTime = newAppointment.toLocalTime("UTC");
+    localTime = newAppointment.toLocalTime(IST);
   }
 
   return res.status(201).json(
