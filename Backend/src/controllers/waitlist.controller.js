@@ -184,4 +184,25 @@ export const joinWaitlist = asyncHandler(async (req, res) => {
     );
 });
 
+export const getMyWaitlist = asyncHandler(async (req, res) => {
+  const patientId = req.user?._id;
 
+  if (!patientId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const waitlists = await waitlistModel.find({
+    patientId,
+    status: { $in: ["WAITING", "NOTIFIED"] },
+  }).lean();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        waitlists,
+        "Waitlist fetched successfully",
+      ),
+    );
+});

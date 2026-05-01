@@ -56,7 +56,8 @@ const Home = () => {
   };
 
   const handleJoinWaitlist = async (doctor, slot, slotKey) => {
-    setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "loading" }));
+    const waitlistKey = `${doctor._id}-${slot.slotStartUTC}`;
+    setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "loading" }));
     try {
       await apiRequest.post("/waitlist/join", {
         doctorId: doctor._id,
@@ -65,15 +66,15 @@ const Home = () => {
         reason: "Interested in this slot",
         timezone: "Asia/Kolkata",
       });
-      setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "joined" }));
+      setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "joined" }));
     } catch (err) {
       const msg = err.response?.data?.message || "";
       if (msg.toLowerCase().includes("already on the waitlist")) {
-        setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "joined" }));
+        setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "joined" }));
       } else {
-        setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "error" }));
+        setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "error" }));
         setTimeout(
-          () => setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "idle" })),
+          () => setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "idle" })),
           3000,
         );
       }
@@ -103,7 +104,21 @@ const Home = () => {
   };
 
   useEffect(() => {
+    const fetchMyWaitlist = async () => {
+      try {
+        const res = await apiRequest.get("/waitlist/my");
+        const waitlistMap = {};
+        res.data.data.forEach((item) => {
+          waitlistMap[`${item.doctorId}-${item.slotStartUTC}`] = "joined";
+        });
+        setWaitlistStatus((prev) => ({ ...prev, ...waitlistMap }));
+      } catch (error) {
+        // user might not be logged in or not a patient, ignore
+      }
+    };
+
     handleSearch();
+    fetchMyWaitlist();
   }, []);
 
   const handleModalConfirm = (doctor) => {

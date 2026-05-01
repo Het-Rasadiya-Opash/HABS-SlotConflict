@@ -49,7 +49,8 @@ const AllSlotsModal = ({
   };
 
   const WaitlistBtn = ({ slotKey, slot }) => {
-    const status = waitlistStatus[slotKey] || "idle";
+    const waitlistKey = `${doctor._id}-${slot.slotStartUTC}`;
+    const status = waitlistStatus[waitlistKey] || "idle";
 
     if (status === "joined") {
       return (
@@ -131,7 +132,6 @@ const AllSlotsModal = ({
                     const key = `${doctor._id}-modal-${dateKey}-${idx}`;
                     const isSelected = selectedSlotKey === key;
                     const isFull = slot.isFull === true;
-                    console.log(isFull);
 
                     return (
                       <div
