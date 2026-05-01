@@ -19,10 +19,10 @@ import {
   X,
   ChevronRight,
   CalendarDays,
+  BellPlus,
+  CheckCircle2,
 } from "lucide-react";
 import AllSlotsModal from "../components/AllSlotsModal";
-
-
 
 const Home = () => {
   const navigate = useNavigate();
@@ -41,6 +41,8 @@ const Home = () => {
 
   const [modalDoctor, setModalDoctor] = useState(null);
 
+  const [waitlistStatus, setWaitlistStatus] = useState({});
+
   const handleSlotClick = (doctor, slot, key) => {
     setSelectedSlotKey(key);
     setSlotsByDoctor((prev) => ({ ...prev, [doctor._id]: slot }));
@@ -51,6 +53,31 @@ const Home = () => {
     if (!slot) return;
     dispatch(setBookingContext({ doctor, slot }));
     navigate("/book-appointment");
+  };
+
+  const handleJoinWaitlist = async (doctor, slot, slotKey) => {
+    setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "loading" }));
+    try {
+      await apiRequest.post("/waitlist/join", {
+        doctorId: doctor._id,
+        slotStartUTC: slot.slotStartUTC,
+        slotEndUTC: slot.slotEndUTC,
+        reason: "Interested in this slot",
+        timezone: "Asia/Kolkata",
+      });
+      setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "joined" }));
+    } catch (err) {
+      const msg = err.response?.data?.message || "";
+      if (msg.toLowerCase().includes("already on the waitlist")) {
+        setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "joined" }));
+      } else {
+        setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "error" }));
+        setTimeout(
+          () => setWaitlistStatus((prev) => ({ ...prev, [slotKey]: "idle" })),
+          3000,
+        );
+      }
+    }
   };
 
   const handleSearch = async (e) => {
@@ -330,9 +357,11 @@ const Home = () => {
         <AllSlotsModal
           doctor={modalDoctor}
           selectedSlotKey={selectedSlotKey}
+          waitlistStatus={waitlistStatus}
           onSelectSlot={(doctor, slot, key) => {
             handleSlotClick(doctor, slot, key);
           }}
+          onJoinWaitlist={handleJoinWaitlist}
           onClose={() => {
             if (slotsByDoctor[modalDoctor._id]) {
               handleBookAppointment(modalDoctor);

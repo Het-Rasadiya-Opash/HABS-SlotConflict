@@ -1,4 +1,5 @@
 import doctorProfileModel from "../models/doctorProfile.model.js";
+import appointmentModel from "../models/appointment.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -187,7 +188,7 @@ export const getMyProfile = asyncHandler(async (req, res) => {
     );
 });
 
-const getNextOpenSlots = (doctor, startDate, n = 5) => {
+const getNextOpenSlots = async (doctor, startDate, n = 5) => {
   const slots = [];
   const now = DateTime.utc();
   const tz = doctor.timezone || IST;
@@ -232,12 +233,20 @@ const getNextOpenSlots = (doctor, startDate, n = 5) => {
           const slotEndUTC = slotEndLocal.toUTC();
 
           if (slotStartUTC > now) {
+            const bookedCount = await appointmentModel.countDocuments({
+              doctorId: doctor._id,
+              status: { $in: ["PENDING", "CONFIRMED"] },
+              slotStartUTC: { $lt: slotEndUTC.toJSDate() },
+              slotEndUTC:   { $gt: slotStartUTC.toJSDate() },
+            });
+
             slots.push({
               date: dateStr,
               time: slotStartLocal.toFormat("HH:mm"),
               endTime: slotEndLocal.toFormat("HH:mm"),
               slotStartUTC: slotStartUTC.toISO(),
               slotEndUTC: slotEndUTC.toISO(),
+              isFull: bookedCount >= doctor.maxPatientsPerSlot,
             });
           }
 
@@ -275,13 +284,15 @@ export const searchDoctor = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Invalid date format. Use YYYY-MM-DD");
   }
 
-  const results = doctors.map((doctor) => {
-    const nextSlots = getNextOpenSlots(doctor, searchDate, parseInt(n));
-    return {
-      ...doctor.toObject(),
-      nextSlots,
-    };
-  });
+  const results = await Promise.all(
+    doctors.map(async (doctor) => {
+      const nextSlots = await getNextOpenSlots(doctor, searchDate, parseInt(n));
+      return {
+        ...doctor.toObject(),
+        nextSlots,
+      };
+    })
+  );
 
   let filteredResults = results;
   if (date) {
