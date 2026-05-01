@@ -206,9 +206,6 @@ const EmptyState = () => (
     <h3 className="text-xl font-bold text-slate-900 mb-2">
       No Appointments Today
     </h3>
-    <p className="text-slate-400 max-w-xs">
-      You don't have any appointments scheduled for today.
-    </p>
   </div>
 );
 

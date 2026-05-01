@@ -443,7 +443,7 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
   ) {
     throw new ApiError(
       400,
-      `can'y reschedule  appointment  ${oldAppointment.status.toLowerCase()}`,
+      `can't reschedule  appointment  ${oldAppointment.status.toLowerCase()}`,
     );
   }
 
@@ -573,4 +573,66 @@ export const rescheduleAppointment = asyncHandler(async (req, res) => {
       "Appointment rescheduled successfully",
     ),
   );
+});
+
+export const doctorUpdateAppointmentStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  if (req.user.role !== "Doctor") {
+    throw new ApiError(403, "Only doctors can update appointment status");
+  }
+
+  const ALLOWED_STATUSES = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"];
+  if (!status || !ALLOWED_STATUSES.includes(status)) {
+    throw new ApiError(
+      400,
+      `Invalid status. Allowed values: ${ALLOWED_STATUSES.join(", ")}`,
+    );
+  }
+
+  const doctorProfile = await doctorProfileModel.findOne({ userId }).lean();
+  if (!doctorProfile) {
+    throw new ApiError(404, "Doctor profile not found");
+  }
+
+  const appointment = await appointmentModel.findById(id);
+  if (!appointment) {
+    throw new ApiError(404, "Appointment not found");
+  }
+
+  if (appointment.doctorId.toString() !== doctorProfile._id.toString()) {
+    throw new ApiError(
+      403,
+      "You are not authorized to update this appointment ",
+    );
+  }
+
+  if (
+    appointment.status === "CANCELLED" ||
+    appointment.status === "COMPLETED"
+  ) {
+    throw new ApiError(
+      400,
+      `Appointment is already ${appointment.status.toLowerCase()} and cannot be modified`,
+    );
+  }
+
+  appointment.status = status;
+  await appointment.save();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { bookingId: appointment.bookingId, status: appointment.status },
+        "Appointment status updated successfully",
+      ),
+    );
 });

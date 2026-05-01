@@ -24,7 +24,7 @@ const LoginPage = () => {
   });
 
   const dispatch = useDispatch();
-  const { loading, error } = useSelector((state) => state.users);
+  const { loading, error, currentUser } = useSelector((state) => state.users);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,7 +43,10 @@ const LoginPage = () => {
     try {
       const res = await apiRequest.post("/users/login", formData);
       dispatch(setCurrentUser(res.data.data.user));
-      navigate("/");
+      const role = res.data.data.user.role;
+      if (role === "Clinic Admin") navigate("/admin-panel");
+      else if (role === "Doctor") navigate("/dashboard");
+      else navigate("/");
     } catch (err) {
       const errorData =
         err.response?.data?.message || "Login failed. Please try again.";
