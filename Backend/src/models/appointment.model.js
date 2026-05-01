@@ -88,7 +88,10 @@ appointmentSchema.methods.isCancellable = function (minHoursBefore = 4) {
   const now = DateTime.utc();
   const slotStart = DateTime.fromJSDate(this.slotStartUTC, { zone: "utc" });
   const hoursUntilSlot = slotStart.diff(now, "hours").hours;
-  return hoursUntilSlot >= minHoursBefore && this.status === "CONFIRMED";
+  return (
+    hoursUntilSlot >= minHoursBefore &&
+    (this.status === "CONFIRMED" || this.status === "PENDING")
+  );
 };
 
 appointmentSchema.methods.toLocalTime = function (ianaTimezone) {

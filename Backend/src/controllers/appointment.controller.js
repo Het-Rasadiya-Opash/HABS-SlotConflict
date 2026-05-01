@@ -267,16 +267,17 @@ export const getAppointmentByDoctor = asyncHandler(async (req, res) => {
 
   const filter = { doctorId: doctorProfile._id };
 
-  if (date) {
-    const tz = doctorProfile.timezone || "utc";
-    const startOfDay = DateTime.fromISO(date, { zone: tz })
-      .startOf("day")
-      .toJSDate();
-    const endOfDay = DateTime.fromISO(date, { zone: tz })
-      .endOf("day")
-      .toJSDate();
-    filter.slotStartUTC = { $gte: startOfDay, $lte: endOfDay };
-  }
+  const tz = doctorProfile.timezone || "utc";
+  const targetDate = date || DateTime.now().setZone(tz).toISODate();
+
+  const startOfDay = DateTime.fromISO(targetDate, { zone: tz })
+    .startOf("day")
+    .toJSDate();
+  const endOfDay = DateTime.fromISO(targetDate, { zone: tz })
+    .endOf("day")
+    .toJSDate();
+
+  filter.slotStartUTC = { $gte: startOfDay, $lte: endOfDay };
 
   const appointments = await appointmentModel
     .find(filter)
@@ -335,4 +336,232 @@ export const getAppointmentByDoctor = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new ApiResponse(200, shaped, "Fetched doctor appointments"));
+});
+
+export const cancelAppointment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const appointment = await appointmentModel.findById(id).populate("doctorId");
+  if (!appointment) {
+    throw new ApiError(404, "Appointment not found");
+  }
+
+  const isPatient = appointment.patientId.toString() === userId.toString();
+  const isDoctor = appointment.doctorId.userId.toString() === userId.toString();
+
+  if (!isPatient && !isDoctor) {
+    throw new ApiError(
+      403,
+      "only doctor & patient permission to cancel this appointment",
+    );
+  }
+
+  if (
+    appointment.status === "CANCELLED" ||
+    appointment.status === "COMPLETED"
+  ) {
+    throw new ApiError(
+      400,
+      `Appointment is already ${appointment.status.toLowerCase()}`,
+    );
+  }
+
+  if (isPatient && !appointment.isCancellable(4)) {
+    throw new ApiError(
+      400,
+      "Appointments  cancelled at least 4 hours in advance",
+    );
+  }
+
+  appointment.status = "CANCELLED";
+  appointment.cancelledAt = new Date();
+  appointment.cancelledBy = userId;
+  appointment.cancellationReason = reason || "Cancelled by user";
+
+  await appointment.save();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { bookingId: appointment.bookingId, status: appointment.status },
+        "Appointment cancelled successfully",
+      ),
+    );
+});
+
+export const rescheduleAppointment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {
+    newSlotStartUTC: rawStart,
+    newSlotEndUTC: rawEnd,
+    timezone = "UTC",
+  } = req.body;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  if (!rawStart || !rawEnd) {
+    throw new ApiError(400, "newSlotStartUTC and newSlotEndUTC are required");
+  }
+
+  const oldAppointment = await appointmentModel
+    .findById(id)
+    .populate("doctorId");
+  if (!oldAppointment) {
+    throw new ApiError(404, "Appointment not found");
+  }
+
+  const isPatient = oldAppointment.patientId.toString() === userId.toString();
+  const isDoctor =
+    oldAppointment.doctorId.userId.toString() === userId.toString();
+
+  if (!isPatient && !isDoctor) {
+    throw new ApiError(
+      403,
+      "only doctor & patient permission to reschedule this appointment",
+    );
+  }
+
+  if (
+    oldAppointment.status === "CANCELLED" ||
+    oldAppointment.status === "COMPLETED"
+  ) {
+    throw new ApiError(
+      400,
+      `can'y reschedule  appointment  ${oldAppointment.status.toLowerCase()}`,
+    );
+  }
+
+  if (isPatient && !oldAppointment.isCancellable(4)) {
+    throw new ApiError(
+      400,
+      "Appointments rescheduled at least 4 hours in advance",
+    );
+  }
+
+  const slotStart = DateTime.fromISO(rawStart, { zone: "utc" });
+  const slotEnd = DateTime.fromISO(rawEnd, { zone: "utc" });
+
+  if (!slotStart.isValid || !slotEnd.isValid) {
+    throw new ApiError(
+      400,
+      "newSlotStartUTC and newSlotEndUTC  valid datetime strings",
+    );
+  }
+
+  if (slotEnd <= slotStart) {
+    throw new ApiError(400, "newSlotEndUTC  after newSlotStartUTC");
+  }
+  if (slotStart <= DateTime.utc()) {
+    throw new ApiError(400, "can't reschedule to a slot in the past");
+  }
+
+  const doctor = await doctorProfileModel
+    .findById(oldAppointment.doctorId._id)
+    .lean();
+  if (!doctor.isAcceptingAppointments) {
+    throw new ApiError(409, " doctor is not accepting appointments ");
+  }
+
+  const slotDateStr = slotStart.toFormat("yyyy-MM-dd");
+  const dayKey = DAY_MAP[slotStart.weekday % 7];
+  const windows = doctor.weeklyAvailability?.[dayKey] ?? [];
+
+  if (windows.length === 0) {
+    throw new ApiError(409, `Dr. is not available on ${dayKey}s`);
+  }
+
+  if (doctor.blackoutDates?.includes(slotDateStr)) {
+    throw new ApiError(409, `  date ${slotDateStr} is blocked by the doctor`);
+  }
+
+  const reqStartHHMM = slotStart.toFormat("HH:mm");
+  const reqEndHHMM = slotEnd.toFormat("HH:mm");
+  const fitsWindow = windows.some(
+    (w) => reqStartHHMM >= w.start && reqEndHHMM <= w.end,
+  );
+
+  if (!fitsWindow) {
+    throw new ApiError(
+      409,
+      `Requested time ${reqStartHHMM}–${reqEndHHMM} is outside the doctor's availability window on ${dayKey}`,
+    );
+  }
+
+  const requestedDurationMin = slotEnd.diff(slotStart, "minutes").minutes;
+  if (requestedDurationMin !== doctor.slotDurationMin) {
+    throw new ApiError(
+      400,
+      `Slot duration must be exactly ${doctor.slotDurationMin} minutes for this doctor`,
+    );
+  }
+
+  const conflictCount = await appointmentModel.countDocuments({
+    doctorId: doctor._id,
+    status: { $in: ["PENDING", "CONFIRMED"] },
+    _id: { $ne: oldAppointment._id },
+    slotStartUTC: { $lt: slotEnd.toJSDate() },
+    slotEndUTC: { $gt: slotStart.toJSDate() },
+  });
+
+  if (conflictCount >= doctor.maxPatientsPerSlot) {
+    throw new ApiError(
+      409,
+      "This slot is fully booked. Please choose another time.",
+    );
+  }
+
+  oldAppointment.status = "CANCELLED";
+  oldAppointment.cancelledAt = new Date();
+  oldAppointment.cancelledBy = userId;
+  oldAppointment.cancellationReason = "Rescheduled to a new time";
+  await oldAppointment.save();
+
+  const newAppointment = await appointmentModel.create({
+    doctorId: doctor._id,
+    patientId: oldAppointment.patientId,
+    slotStartUTC: slotStart.toJSDate(),
+    slotEndUTC: slotEnd.toJSDate(),
+    reason: oldAppointment.reason,
+    ...(oldAppointment.notes ? { notes: oldAppointment.notes } : {}),
+    status: "PENDING",
+    rescheduledFrom: oldAppointment._id,
+  });
+
+  let localTime;
+  try {
+    localTime = newAppointment.toLocalTime(timezone);
+  } catch {
+    localTime = newAppointment.toLocalTime("UTC");
+  }
+
+  return res.status(201).json(
+    new ApiResponse(
+      201,
+      {
+        bookingId: newAppointment.bookingId,
+        status: newAppointment.status,
+        slot: {
+          startUTC: slotStart.toISO(),
+          endUTC: slotEnd.toISO(),
+          durationMin: requestedDurationMin,
+          localStart: localTime.displayStart,
+          localEnd: localTime.displayEnd,
+          timezone,
+        },
+        rescheduledFrom: oldAppointment.bookingId,
+      },
+      "Appointment rescheduled successfully",
+    ),
+  );
 });

@@ -87,9 +87,9 @@ const WeeklyAvailabilityData = ({ profile }) => {
                       <p className="text-sm font-extrabold text-slate-800">
                         {day.toUpperCase()}
                       </p>
-                      <p className="text-xs font-medium text-slate-500">
+                      {/* <p className="text-xs font-medium text-slate-500">
                         {dateStr}
-                      </p>
+                      </p> */}
                     </div>
 
                     <div className="flex flex-col gap-2 w-full">

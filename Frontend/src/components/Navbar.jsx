@@ -8,6 +8,7 @@ import {
   Calendar,
   Stethoscope,
   Building2,
+  CalendarClock,
 } from "lucide-react";
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -62,13 +63,22 @@ const Navbar = () => {
             {currentUser ? (
               <div className="flex items-center gap-6 ">
                 {currentUser.role === "Doctor" && (
-                  <Link
-                    to="/dashboard"
-                    className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
-                  >
-                    <LayoutDashboard className="w-4 h-4" />
-                    Dashboard
-                  </Link>
+                  <>
+                    <Link
+                      to="/dashboard"
+                      className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
+                    >
+                      <LayoutDashboard className="w-4 h-4" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/doctor-appointment"
+                      className="flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-indigo-600 transition-colors"
+                    >
+                      <CalendarClock className="w-4 h-4" />
+                      Today Appointment
+                    </Link>
+                  </>
                 )}
 
                 {currentUser?.role === "Patient" && (
@@ -153,14 +163,24 @@ const Navbar = () => {
             <>
               <div className="h-px bg-slate-100 my-2" />
               {currentUser.role === "Doctor" && (
-                <Link
-                  to="/dashboard"
-                  onClick={() => setIsOpen(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
-                >
-                  <LayoutDashboard className="w-5 h-5 text-slate-400" />
-                  Dashboard
-                </Link>
+                <>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                  >
+                    <LayoutDashboard className="w-5 h-5 text-slate-400" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    to="/doctor-appointment"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-slate-700 hover:bg-slate-50 rounded-xl transition-colors"
+                  >
+                    <CalendarClock className="w-5 h-5 text-slate-400" />
+                    Today Appointment
+                  </Link>
+                </>
               )}
               {currentUser.role === "Patient" && (
                 <Link
