@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
+import { toast } from "react-toastify";
 import { setBookingContext } from "../features/appointmentSlice";
 import apiRequest from "../utils/apiRequest";
 import {
@@ -67,12 +68,15 @@ const Home = () => {
         timezone: "Asia/Kolkata",
       });
       setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "joined" }));
+      toast.success("Successfully joined the waitlist!");
     } catch (err) {
       const msg = err.response?.data?.message || "";
       if (msg.toLowerCase().includes("already on the waitlist")) {
         setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "joined" }));
+        toast.info("You are already on the waitlist for this slot.");
       } else {
         setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "error" }));
+        toast.error(msg || "Failed to join waitlist. Please try again.");
         setTimeout(
           () =>
             setWaitlistStatus((prev) => ({ ...prev, [waitlistKey]: "idle" })),
@@ -95,10 +99,11 @@ const Home = () => {
       const response = await apiRequest.get("/doctor/search", { params });
       setDoctors(response.data.data);
     } catch (err) {
-      setError(
+      const errorMsg =
         err.response?.data?.message ||
-          "Failed to fetch doctors. Please try again.",
-      );
+        "Failed to fetch doctors. Please try again.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setLoading(false);
     }

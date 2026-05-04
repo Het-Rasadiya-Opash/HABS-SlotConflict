@@ -23,6 +23,7 @@ import {
   setLoading,
   clearError,
 } from "../features/appointmentSlice";
+import { toast } from "react-toastify";
 
 const formatDateTime = (isoString) => {
   if (!isoString) return { date: "—", time: "—" };
@@ -378,9 +379,10 @@ const Appointments = () => {
       return;
     try {
       await apiRequest.post(`/waitlist/${waitlistId}`);
+      toast.success("Successfully left the waitlist");
       fetchWaitlists();
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to leave waitlist");
+      toast.error(err.response?.data?.message || "Failed to leave waitlist");
     }
   };
 

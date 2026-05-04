@@ -15,6 +15,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router";
 import { logout } from "../features/usersSlice";
 import apiRequest from "../utils/apiRequest";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,10 +27,12 @@ const Navbar = () => {
     try {
       await apiRequest.post("/users/logout");
       dispatch(logout());
+      toast.success("Logged out successfully");
       navigate("/login");
       setIsOpen(false);
     } catch (error) {
       console.error("Logout failed", error);
+      toast.error("Logout failed");
     }
   };
 

@@ -22,6 +22,7 @@ import {
   Clock3,
   RefreshCw,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const STATUSES = ["PENDING", "CONFIRMED", "COMPLETED", "CANCELLED"];
 
@@ -124,6 +125,7 @@ const DoctorShowAllAppointments = () => {
           a._id === appointmentId ? { ...a, status: newStatus } : a,
         ),
       );
+      toast.success(`Status updated to ${newStatus}`);
 
       if (newStatus === "CANCELLED" && updatedAppt) {
         try {
@@ -137,9 +139,9 @@ const DoctorShowAllAppointments = () => {
         }
       }
     } catch (err) {
-      setUpdateError(
-        err?.response?.data?.message || "Status update failed. Try again.",
-      );
+      const errMsg = err?.response?.data?.message || "Status update failed. Try again.";
+      setUpdateError(errMsg);
+      toast.error(errMsg);
     }
   };
 

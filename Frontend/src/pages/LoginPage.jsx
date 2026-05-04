@@ -16,6 +16,7 @@ import {
   setLoading,
 } from "../features/usersSlice";
 import apiRequest from "../utils/apiRequest";
+import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -43,6 +44,7 @@ const LoginPage = () => {
     try {
       const res = await apiRequest.post("/users/login", formData);
       dispatch(setCurrentUser(res.data.data.user));
+      toast.success("Login successful!");
       const role = res.data.data.user.role;
       if (role === "Clinic Admin") navigate("/admin-panel");
       else if (role === "Doctor") navigate("/dashboard");
@@ -50,6 +52,7 @@ const LoginPage = () => {
     } catch (err) {
       const errorData =
         err.response?.data?.message || "Login failed. Please try again.";
+      toast.error(errorData);
       dispatch(setError(errorData));
     } finally {
       dispatch(setLoading(false));

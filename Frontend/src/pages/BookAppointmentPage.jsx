@@ -22,6 +22,7 @@ import {
   FileText,
   StickyNote,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 const BookAppointmentPage = () => {
   const navigate = useNavigate();
@@ -72,13 +73,11 @@ const BookAppointmentPage = () => {
 
       const response = await apiRequest.post("/appointment/book", payload);
       dispatch(setBookingResult(response.data.data));
+      toast.success("Appointment booked successfully!");
     } catch (err) {
-      dispatch(
-        setError(
-          err.response?.data?.message ||
-            "Failed to book appointment. Please try again.",
-        ),
-      );
+      const errorMsg = err.response?.data?.message || "Failed to book appointment. Please try again.";
+      toast.error(errorMsg);
+      dispatch(setError(errorMsg));
     }
   };
 

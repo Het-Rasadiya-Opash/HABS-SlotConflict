@@ -13,6 +13,8 @@ import Appointments from "./pages/Appointments";
 import AdminPanel from "./pages/AdminPanel";
 import BookAppointmentPage from "./pages/BookAppointmentPage";
 import TodayDoctorAppointment from "./pages/TodayDoctorAppointment";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   const dispatch = useDispatch();
@@ -57,6 +59,7 @@ const App = () => {
           </Route>
         </Routes>
       </main>
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };

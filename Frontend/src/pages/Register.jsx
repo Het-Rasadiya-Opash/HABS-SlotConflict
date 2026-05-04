@@ -20,6 +20,7 @@ import {
   setLoading,
 } from "../features/usersSlice";
 import apiRequest from "../utils/apiRequest";
+import { toast } from "react-toastify";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -49,10 +50,12 @@ const Register = () => {
     try {
       const res = await apiRequest.post("/users/register", formData);
       dispatch(setCurrentUser(res.data.data.user));
+      toast.success("Registration successful!");
       navigate("/");
     } catch (err) {
       const errorData =
         err.response?.data?.message || "Registration failed. Please try again.";
+      toast.error(errorData);
       dispatch(setError(errorData));
     } finally {
       dispatch(setLoading(false));

@@ -136,14 +136,20 @@ export const joinWaitlist = asyncHandler(async (req, res) => {
     doctorId,
     slotStartUTC: slotStart.toJSDate(),
     patientId,
-    status: { $in: ["WAITING", "NOTIFIED"] },
   });
 
   if (existing) {
-    throw new ApiError(
-      409,
-      `You are already on the waitlist for this slot at position #${existing.position} (${existing.waitlistId})`,
-    );
+    if (["WAITING", "NOTIFIED"].includes(existing.status)) {
+      throw new ApiError(
+        409,
+        `You are already on the waitlist for this slot at position #${existing.position} (${existing.waitlistId})`,
+      );
+    } else if (existing.status === "BOOKED") {
+      throw new ApiError(
+        409,
+        "You already have a booked appointment for this slot from the waitlist.",
+      );
+    }
   }
 
   const lastEntry = await waitlistModel
@@ -158,15 +164,35 @@ export const joinWaitlist = asyncHandler(async (req, res) => {
 
   const position = lastEntry ? lastEntry.position + 1 : 1;
 
-  const entry = await waitlistModel.create({
-    doctorId,
-    patientId,
-    slotStartUTC: slotStart.toJSDate(),
-    slotEndUTC: slotEnd.toJSDate(),
-    position,
-    reason: reason?.trim() || undefined,
-    status: "WAITING",
-  });
+  let entry;
+  try {
+    if (existing && ["SKIPPED", "EXPIRED"].includes(existing.status)) {
+      existing.status = "WAITING";
+      existing.position = position;
+      existing.reason = reason?.trim() || undefined;
+      existing.notifiedAt = null;
+      await existing.save();
+      entry = existing;
+    } else {
+      entry = await waitlistModel.create({
+        doctorId,
+        patientId,
+        slotStartUTC: slotStart.toJSDate(),
+        slotEndUTC: slotEnd.toJSDate(),
+        position,
+        reason: reason?.trim() || undefined,
+        status: "WAITING",
+      });
+    }
+  } catch (error) {
+    if (error.code === 11000) {
+      throw new ApiError(
+        409,
+        "You are already on the waitlist for this slot.",
+      );
+    }
+    throw error;
+  }
 
   await entry.populate([
     {
