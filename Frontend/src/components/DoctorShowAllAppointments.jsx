@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import {
   clearError,
@@ -81,27 +81,28 @@ const DoctorShowAllAppointments = () => {
   const [localAppointments, setLocalAppointments] = useState([]);
   const [updateError, setUpdateError] = useState(null);
 
+  const fetchAll = useCallback(async () => {
+    dispatch(setLoading(true));
+    dispatch(clearError());
+    try {
+      const params = filterStatus !== "ALL" ? { status: filterStatus } : {};
+      const res = await apiRequest.get("/appointment/", { params });
+      dispatch(setBookingResult(res.data.data));
+      setLocalAppointments(res.data.data?.appointments ?? []);
+    } catch (err) {
+      dispatch(
+        setError(
+          err?.response?.data?.message || "Failed to fetch appointments",
+        ),
+      );
+    } finally {
+      dispatch(setLoading(false));
+    }
+  }, [dispatch, filterStatus]);
+
   useEffect(() => {
-    const fetchAll = async () => {
-      dispatch(setLoading(true));
-      dispatch(clearError());
-      try {
-        const params = filterStatus !== "ALL" ? { status: filterStatus } : {};
-        const res = await apiRequest.get("/appointment/", { params });
-        dispatch(setBookingResult(res.data.data));
-        setLocalAppointments(res.data.data?.appointments ?? []);
-      } catch (err) {
-        dispatch(
-          setError(
-            err?.response?.data?.message || "Failed to fetch appointments",
-          ),
-        );
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
     fetchAll();
-  }, [filterStatus]);
+  }, [fetchAll]);
 
   useEffect(() => {
     if (bookingResult?.appointments) {
@@ -130,6 +131,7 @@ const DoctorShowAllAppointments = () => {
             doctorId: updatedAppt.doctor?.id,
             slotStartUTC: updatedAppt.slot?.startUTC,
           });
+          await fetchAll();
         } catch (waitlistErr) {
           console.error("Failed to process next in waitlist queue", waitlistErr);
         }
