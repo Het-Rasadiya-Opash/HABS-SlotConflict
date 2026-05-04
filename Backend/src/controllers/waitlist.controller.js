@@ -147,7 +147,11 @@ export const joinWaitlist = asyncHandler(async (req, res) => {
   }
 
   const lastEntry = await waitlistModel
-    .findOne({ doctorId, slotStartUTC: slotStart.toJSDate() })
+    .findOne({
+      doctorId,
+      slotStartUTC: slotStart.toJSDate(),
+      status: { $in: ["WAITING", "NOTIFIED"] },
+    })
     .sort({ position: -1 })
     .select("position")
     .lean();
@@ -242,7 +246,7 @@ export const leaveWaitlist = asyncHandler(async (req, res) => {
     {
       doctorId: waitlistEntry.doctorId,
       slotStartUTC: waitlistEntry.slotStartUTC,
-      position: waitlistEntry.position,
+      position: { $gt: waitlistEntry.position },
       status: { $in: ["WAITING", "NOTIFIED"] },
     },
     {
