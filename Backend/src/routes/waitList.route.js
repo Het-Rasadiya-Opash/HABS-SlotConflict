@@ -5,11 +5,13 @@ import {
   joinWaitlist,
   getMyWaitlist,
   leaveWaitlist,
+  getSlotQueue,
 } from "../controllers/waitlist.controller.js";
 const router = express.Router();
 
 router.post("/join", authMiddleware, authorizeRole("Patient"), joinWaitlist);
 router.get("/my", authMiddleware, authorizeRole("Patient"), getMyWaitlist);
+router.get("/slot", authMiddleware, authorizeRole("Doctor"), getSlotQueue);
 router.post(
   "/:waitlistId",
   authMiddleware,

@@ -186,6 +186,7 @@ export const joinWaitlist = asyncHandler(async (req, res) => {
 
 export const getMyWaitlist = asyncHandler(async (req, res) => {
   const patientId = req.user?._id;
+  const { timezone = IST } = req.query;
 
   if (!patientId) {
     throw new ApiError(401, "Authentication required");
@@ -196,11 +197,21 @@ export const getMyWaitlist = asyncHandler(async (req, res) => {
       patientId,
       status: { $in: ["WAITING", "NOTIFIED"] },
     })
+    .populate([
+      {
+        path: "doctorId",
+        select: "specialty location consultationFee",
+        populate: { path: "userId", select: "username email" },
+      },
+      { path: "patientId", select: "username email" },
+    ])
     .lean();
+
+  const shaped = waitlists.map((entry) => shapeEntry(entry, timezone));
 
   return res
     .status(200)
-    .json(new ApiResponse(200, waitlists, "Waitlist fetched successfully"));
+    .json(new ApiResponse(200, shaped, "Waitlist fetched successfully"));
 });
 
 export const leaveWaitlist = asyncHandler(async (req, res) => {
@@ -227,8 +238,6 @@ export const leaveWaitlist = asyncHandler(async (req, res) => {
     );
   }
 
-  console.log(waitlistEntry.position);
-
   await waitlistModel.updateMany(
     {
       doctorId: waitlistEntry.doctorId,
@@ -241,10 +250,60 @@ export const leaveWaitlist = asyncHandler(async (req, res) => {
     },
   );
 
-    waitlistEntry.status = "SKIPPED";
-    await waitlistEntry.save();
+  waitlistEntry.status = "SKIPPED";
+  await waitlistEntry.save();
 
   return res
     .status(200)
     .json(new ApiResponse(200, null, "Successfully left the waitlist"));
+});
+
+export const getSlotQueue = asyncHandler(async (req, res) => {
+  const userId = req.user?._id;
+  const { doctorId, slotStartUTC: rawStart, timezone = IST } = req.query;
+
+  if (!userId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  const doctorProfile = await doctorProfileModel.findOne({ userId }).lean();
+  if (!doctorProfile) {
+    throw new ApiError(404, "Doctor profile not found");
+  }
+
+  if (doctorId && doctorProfile._id.toString() !== doctorId) {
+    throw new ApiError(403, "You can only view your own waitlist queue");
+  }
+
+  if (!rawStart) {
+    throw new ApiError(400, "slotStartUTC is required");
+  }
+
+  const slotStart = DateTime.fromISO(rawStart, { zone: "utc" });
+  if (!slotStart.isValid) {
+    throw new ApiError(400, "Invalid slotStartUTC datetime string");
+  }
+
+  const queue = await waitlistModel
+    .find({
+      doctorId: doctorProfile._id,
+      slotStartUTC: slotStart.toJSDate(),
+      status: { $in: ["WAITING", "NOTIFIED"] },
+    })
+    .sort({ position: 1 })
+    .populate([
+      {
+        path: "doctorId",
+        select: "specialty location consultationFee",
+        populate: { path: "userId", select: "username email" },
+      },
+      { path: "patientId", select: "username email" },
+    ])
+    .lean();
+
+  const shaped = queue.map((entry) => shapeEntry(entry, timezone));
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, shaped, "Fetched slot queue successfully"));
 });

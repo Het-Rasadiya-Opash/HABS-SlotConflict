@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { formatDateIST, formatTimeIST } from "../utils/dateUtils";
 import {
   Calendar,
@@ -33,6 +33,22 @@ const formatDateTime = (isoString) => {
 };
 
 const STATUS_MAP = {
+  WAITING: {
+    label: "Waiting",
+    bg: "bg-blue-50",
+    text: "text-blue-600",
+    border: "border-blue-200",
+    dot: "bg-blue-400",
+    Icon: Clock,
+  },
+  NOTIFIED: {
+    label: "Notified",
+    bg: "bg-purple-50",
+    text: "text-purple-600",
+    border: "border-purple-200",
+    dot: "bg-purple-400",
+    Icon: AlertCircle,
+  },
   PENDING: {
     label: "Pending",
     bg: "bg-amber-50",
@@ -211,6 +227,97 @@ const AppointmentCard = ({ appt }) => {
   );
 };
 
+const WaitlistCard = ({ waitlist, onLeave }) => {
+  const start = formatDateTime(waitlist.slot?.startUTC);
+  const end = formatDateTime(waitlist.slot?.endUTC);
+  const joined = formatDateTime(waitlist.joinedAt);
+  const doctor = waitlist.doctor || {};
+  const initial = (doctor.name || "D").charAt(0).toUpperCase();
+
+  return (
+    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col">
+      <div className="px-6 pt-6 pb-4 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500  flex items-center justify-center text-white font-extrabold text-lg shrink-0 shadow-md">
+            {initial}
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900 text-base leading-tight">
+              Dr. {doctor.name || "Unknown"}
+            </h3>
+            <p className="text-indigo-600 font-semibold text-sm">
+              {doctor.specialty || "—"}
+            </p>
+          </div>
+        </div>
+        <StatusBadge status={waitlist.status} />
+      </div>
+
+      <div className="px-6 mb-4">
+        <div className="flex items-center gap-2 bg-slate-50 rounded-xl px-3 py-2 w-fit">
+          <Hash className="h-3.5 w-3.5 text-slate-400" />
+          <span className="font-mono text-xs text-slate-500 font-semibold tracking-wide">
+            {waitlist.waitlistId}
+          </span>
+        </div>
+      </div>
+
+      <div className="px-6 grid grid-cols-2 gap-3 mb-4">
+        <Chip
+          icon={<Calendar className="h-4 w-4" />}
+          label="Date"
+          value={start.date}
+        />
+        <Chip
+          icon={<Clock className="h-4 w-4" />}
+          label="Time"
+          value={`${start.time} – ${end.time}`}
+        />
+        <Chip
+          icon={<MapPin className="h-4 w-4" />}
+          label="Location"
+          value={doctor.location}
+        />
+        <Chip
+          icon={<User className="h-4 w-4" />}
+          label="Queue Pos"
+          value={`#${waitlist.position}`}
+        />
+      </div>
+
+      {waitlist.reason && (
+        <div className="px-6 mb-4 space-y-2">
+          <div className="flex items-start gap-2 text-sm text-slate-600">
+            <FileText className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
+            <p>
+              <span className="font-bold text-slate-400 uppercase text-[10px] tracking-widest block">
+                Reason
+              </span>
+              {waitlist.reason}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="px-6 pb-4 mt-2">
+        <button
+          onClick={() => onLeave(waitlist.waitlistId)}
+          className="w-full py-2.5 px-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-xl font-semibold text-sm transition-colors border border-red-100"
+        >
+          Leave Waitlist
+        </button>
+      </div>
+
+      <div className="mt-auto border-t border-slate-100 px-6 py-3 flex items-center justify-between">
+        <p className="text-[11px] text-slate-400 font-medium">
+          Joined on {joined.date}
+        </p>
+        <p className="text-[11px] text-slate-400 font-medium">{joined.time}</p>
+      </div>
+    </div>
+  );
+};
+
 const EmptyState = () => (
   <div className="col-span-full bg-white rounded-3xl border border-slate-100 shadow-sm flex flex-col items-center text-center py-24 px-8">
     <div className="w-20 h-20 bg-indigo-50 text-indigo-400 rounded-3xl flex items-center justify-center mb-6">
@@ -229,6 +336,21 @@ const Appointments = () => {
   );
   const currentUser = useSelector((state) => state.users.currentUser);
 
+  const [waitlists, setWaitlists] = useState([]);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+
+  const fetchWaitlists = async () => {
+    try {
+      setWaitlistLoading(true);
+      const res = await apiRequest.get("/waitlist/my");
+      setWaitlists(res.data.data || []);
+    } catch (err) {
+      console.error("Failed to fetch waitlists", err);
+    } finally {
+      setWaitlistLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchAppointments = async () => {
       if (!currentUser) return;
@@ -246,7 +368,21 @@ const Appointments = () => {
       }
     };
     fetchAppointments();
+    if (currentUser) {
+      fetchWaitlists();
+    }
   }, [dispatch, currentUser]);
+
+  const handleLeaveWaitlist = async (waitlistId) => {
+    if (!window.confirm("Are you sure you want to leave this waitlist?"))
+      return;
+    try {
+      await apiRequest.post(`/waitlist/${waitlistId}`);
+      fetchWaitlists();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to leave waitlist");
+    }
+  };
 
   const appointments = Array.isArray(bookingResult)
     ? bookingResult
@@ -260,18 +396,22 @@ const Appointments = () => {
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 tracking-tight">
-              My Appointments
+              My Appointments & Waitlists
             </h1>
             {!loading && appointments.length > 0 && (
               <p className="text-slate-400 mt-1 text-sm">
                 {appointments.length} appointment
-                {appointments.length > 1 ? "s" : ""} found
+                {appointments.length > 1 ? "s" : ""}
+                {waitlists.length > 0
+                  ? `, ${waitlists.length} waitlist${waitlists.length > 1 ? "s" : ""}`
+                  : ""}{" "}
+                found
               </p>
             )}
           </div>
         </header>
 
-        {loading && (
+        {(loading || waitlistLoading) && (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="h-10 w-10 text-indigo-500 animate-spin" />
           </div>
@@ -284,16 +424,42 @@ const Appointments = () => {
           </div>
         )}
 
-        {!loading && !error && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {appointments.length === 0 ? (
-              <EmptyState />
-            ) : (
-              appointments.map((appt) => (
-                <AppointmentCard key={appt._id} appt={appt} />
-              ))
+        {!loading && !waitlistLoading && !error && (
+          <>
+            {waitlists.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-xl font-bold text-slate-800">
+                  Active Waitlists
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {waitlists.map((wl) => (
+                    <WaitlistCard
+                      key={wl._id}
+                      waitlist={wl}
+                      onLeave={handleLeaveWaitlist}
+                    />
+                  ))}
+                </div>
+              </div>
             )}
-          </div>
+
+            <div className="space-y-4">
+              {waitlists.length > 0 && (
+                <h2 className="text-xl font-bold text-slate-800">
+                  My Appointments
+                </h2>
+              )}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {appointments.length === 0 && waitlists.length === 0 ? (
+                  <EmptyState />
+                ) : (
+                  appointments.map((appt) => (
+                    <AppointmentCard key={appt._id} appt={appt} />
+                  ))
+                )}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
