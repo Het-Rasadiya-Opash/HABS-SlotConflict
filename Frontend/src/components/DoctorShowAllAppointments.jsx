@@ -115,11 +115,25 @@ const DoctorShowAllAppointments = () => {
       await apiRequest.post(`/appointment/${appointmentId}/status-update`, {
         status: newStatus,
       });
+
+      const updatedAppt = localAppointments.find((a) => a._id === appointmentId);
+
       setLocalAppointments((prev) =>
         prev.map((a) =>
           a._id === appointmentId ? { ...a, status: newStatus } : a,
         ),
       );
+
+      if (newStatus === "CANCELLED" && updatedAppt) {
+        try {
+          await apiRequest.post("/waitlist/process-next", {
+            doctorId: updatedAppt.doctor?.id,
+            slotStartUTC: updatedAppt.slot?.startUTC,
+          });
+        } catch (waitlistErr) {
+          console.error("Failed to process next in waitlist queue", waitlistErr);
+        }
+      }
     } catch (err) {
       setUpdateError(
         err?.response?.data?.message || "Status update failed. Try again.",
@@ -166,7 +180,7 @@ const DoctorShowAllAppointments = () => {
           })}
           <button
             id="refresh-btn"
-            onClick={() => setFilterStatus((f) => f)} // re-trigger useEffect
+            onClick={() => setFilterStatus((f) => f)} 
             className="ml-1 p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-200 transition-all"
             title="Refresh"
           >

@@ -311,3 +311,84 @@ export const getSlotQueue = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, shaped, "Fetched slot queue successfully"));
 });
+
+export const processNextInQueue = asyncHandler(async (req, res) => {
+  const { doctorId, slotStartUTC: rawStart } = req.body;
+
+  if (!doctorId || !rawStart) {
+    throw new ApiError(400, "doctorId and slotStartUTC are required");
+  }
+
+  const slotStart = DateTime.fromISO(rawStart, { zone: "utc" });
+  if (!slotStart.isValid) {
+    throw new ApiError(400, "Invalid slotStartUTC datetime string");
+  }
+
+  const queue = await waitlistModel
+    .find({
+      doctorId,
+      slotStartUTC: slotStart.toJSDate(),
+      status: { $in: ["WAITING", "NOTIFIED"] },
+    })
+    .sort({ position: 1 });
+
+  let bookedCandidate = null;
+
+  for (const entry of queue) {
+    if (entry.status === "NOTIFIED") {
+      if (entry.isActive()) {
+        return res
+          .status(200)
+          .json(
+            new ApiResponse(
+              200,
+              null,
+              `Candidate at position ${entry.position} is currently in their notification window.`,
+            ),
+          );
+      } else {
+        entry.status = "EXPIRED";
+        await entry.save();
+      }
+    } else if (entry.status === "WAITING") {
+      const newAppointment = await appointmentModel.create({
+        doctorId: entry.doctorId,
+        patientId: entry.patientId,
+        slotStartUTC: entry.slotStartUTC,
+        slotEndUTC: entry.slotEndUTC,
+        status: "CONFIRMED",
+        reason: entry.reason || "Auto-booked from waitlist",
+      });
+
+      entry.status = "BOOKED";
+      entry.autoBookedAppointmentId = newAppointment._id;
+      entry.bookedAt = new Date();
+      await entry.save();
+
+      bookedCandidate = entry;
+      break;
+    }
+  }
+
+  if (bookedCandidate) {
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          shapeEntry(bookedCandidate),
+          "Successfully auto-booked the next candidate",
+        ),
+      );
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        null,
+        "No active candidates found in the queue to process",
+      ),
+    );
+});
