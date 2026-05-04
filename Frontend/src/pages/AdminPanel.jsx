@@ -171,7 +171,7 @@ const AdminPanel = () => {
           />
           <StatCard
             icon={CircleCheckBig}
-            label="Confirmed"
+            label="Completed"
             value={loading ? "—" : (summary.completed ?? 0)}
             color="bg-green-500"
           />
