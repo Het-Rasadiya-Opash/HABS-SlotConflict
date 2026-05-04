@@ -9,6 +9,7 @@ import {
   rescheduleAppointment,
   doctorUpdateAppointmentStatus,
   AllAppointmentsOfDoctor,
+  updateDoctorNotes,
 } from "../controllers/appointment.controller.js";
 
 const router = express.Router();
@@ -45,6 +46,13 @@ router.post(
   authMiddleware,
   authorizeRole("Doctor"),
   doctorUpdateAppointmentStatus,
+);
+
+router.post(
+  "/:id/update-doctor-notes",
+  authMiddleware,
+  authorizeRole("Doctor"),
+  updateDoctorNotes,
 );
 
 export default router;

@@ -12,9 +12,11 @@ import {
   Loader2,
   Hash,
   Mail,
+  Save,
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import apiRequest from "../utils/apiRequest";
+import { toast } from "react-toastify";
 import {
   setBookingResult,
   setError,
@@ -92,11 +94,28 @@ const Chip = ({ icon, label, value }) => (
 );
 
 const AppointmentCard = ({ appt }) => {
+  const [doctorNotes, setDoctorNotes] = React.useState(appt.doctorNotes || "");
+  const [saving, setSaving] = React.useState(false);
+
   const start = formatDateTime(appt.slot?.startUTC);
   const end = formatDateTime(appt.slot?.endUTC);
   const booked = formatDateTime(appt.bookedAt);
   const patient = appt.patient || {};
   const initial = (patient.username || "P").charAt(0).toUpperCase();
+
+  const handleSaveNotes = async () => {
+    setSaving(true);
+    try {
+      await apiRequest.post(`/appointment/${appt._id}/update-doctor-notes`, {
+        doctorNotes,
+      });
+      toast.success("Notes saved successfully");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to save notes");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden flex flex-col">
@@ -149,32 +168,56 @@ const AppointmentCard = ({ appt }) => {
         />
       </div>
 
-      {(appt.reason || appt.notes) && (
-        <div className="px-6 mb-4 space-y-2">
-          {appt.reason && (
-            <div className="flex items-start gap-2 text-sm text-slate-600">
-              <FileText className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
-              <p>
-                <span className="font-bold text-slate-400 uppercase text-[10px] tracking-widest block">
-                  Reason
-                </span>
-                {appt.reason}
-              </p>
-            </div>
-          )}
-          {appt.notes && (
-            <div className="flex items-start gap-2 text-sm text-slate-600">
-              <StickyNote className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
-              <p>
-                <span className="font-bold text-slate-400 uppercase text-[10px] tracking-widest block">
-                  Notes
-                </span>
-                {appt.notes}
-              </p>
-            </div>
-          )}
+      <div className="px-6 mb-4 space-y-3">
+        {appt.reason && (
+          <div className="flex items-start gap-2 text-sm text-slate-600">
+            <FileText className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
+            <p>
+              <span className="font-bold text-slate-400 uppercase text-[10px] tracking-widest block">
+                Reason
+              </span>
+              {appt.reason}
+            </p>
+          </div>
+        )}
+        {appt.notes && (
+          <div className="flex items-start gap-2 text-sm text-slate-600">
+            <StickyNote className="h-4 w-4 mt-0.5 shrink-0 text-slate-400" />
+            <p>
+              <span className="font-bold text-slate-400 uppercase text-[10px] tracking-widest block">
+                Patient Notes
+              </span>
+              {appt.notes}
+            </p>
+          </div>
+        )}
+
+        <div className="pt-2 border-t border-slate-50">
+          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+            Doctor's Private Notes
+          </label>
+          <div className="relative group">
+            <textarea
+              value={doctorNotes}
+              onChange={(e) => setDoctorNotes(e.target.value)}
+              placeholder="Add medical notes, observations..."
+              className="w-full bg-slate-50 border-none rounded-xl px-4 py-3 text-sm text-slate-700 placeholder-slate-300 focus:ring-2 focus:ring-indigo-100 outline-none transition-all resize-none min-h-[100px]"
+            />
+            <button
+              onClick={handleSaveNotes}
+              disabled={saving || doctorNotes === (appt.doctorNotes || "")}
+              className="absolute bottom-3 right-3 p-2 bg-white shadow-lg rounded-lg text-indigo-600 hover:bg-indigo-600 hover:text-white disabled:opacity-0 disabled:scale-95 transition-all duration-200"
+              title="Save Notes"
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+            </button>
+          </div>
         </div>
-      )}
+      </div>
 
       {appt.status === "CANCELLED" && appt.cancellationReason && (
         <div className="mx-6 mb-4 flex items-start gap-2 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-600">

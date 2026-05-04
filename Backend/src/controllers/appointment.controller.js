@@ -246,6 +246,7 @@ export const getAppointmentByPatient = asyncHandler(async (req, res) => {
     bookedAt: appt.createdAt,
     cancelledAt: appt.cancelledAt ?? null,
     cancellationReason: appt.cancellationReason ?? null,
+    doctorNotes: appt.doctorNotes ?? "",
   }));
 
   return res
@@ -336,6 +337,7 @@ export const getAppointmentByDoctor = asyncHandler(async (req, res) => {
     bookedAt: appt.createdAt,
     cancelledAt: appt.cancelledAt ?? null,
     cancellationReason: appt.cancellationReason ?? null,
+    doctorNotes: appt.doctorNotes ?? "",
   }));
 
   return res
@@ -739,15 +741,60 @@ export const AllAppointmentsOfDoctor = asyncHandler(async (req, res) => {
     bookedAt: appt.createdAt,
     cancelledAt: appt.cancelledAt ?? null,
     cancellationReason: appt.cancellationReason ?? null,
+    doctorNotes: appt.doctorNotes ?? "",
   }));
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { total: shaped.length, appointments: shaped },
+          "Fetched all doctor appointments",
+        ),
+      );
+});
+
+export const updateDoctorNotes = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { doctorNotes } = req.body;
+  const userId = req.user?._id;
+
+  if (!userId) {
+    throw new ApiError(401, "Authentication required");
+  }
+
+  if (req.user.role !== "Doctor") {
+    throw new ApiError(403, "Only doctors can update doctor notes");
+  }
+
+  const doctorProfile = await doctorProfileModel.findOne({ userId }).lean();
+  if (!doctorProfile) {
+    throw new ApiError(404, "Doctor profile not found");
+  }
+
+  const appointment = await appointmentModel.findById(id);
+  if (!appointment) {
+    throw new ApiError(404, "Appointment not found");
+  }
+
+  if (appointment.doctorId.toString() !== doctorProfile._id.toString()) {
+    throw new ApiError(
+      403,
+      "You are not authorized to update notes for this appointment",
+    );
+  }
+
+  appointment.doctorNotes = doctorNotes || "";
+  await appointment.save();
 
   return res
     .status(200)
     .json(
       new ApiResponse(
         200,
-        { total: shaped.length, appointments: shaped },
-        "Fetched all doctor appointments",
+        { bookingId: appointment.bookingId, doctorNotes: appointment.doctorNotes },
+        "Doctor notes updated successfully",
       ),
     );
 });

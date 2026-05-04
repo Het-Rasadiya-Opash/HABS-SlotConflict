@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 import { DateTime } from "luxon";
-import { IST, formatDateIST, formatTimeIST, formatDateTimeIST, toIST } from "../utils/dateUtils.js";
+import {
+  IST,
+  formatDateIST,
+  formatTimeIST,
+  formatDateTimeIST,
+  toIST,
+} from "../utils/dateUtils.js";
 
 const appointmentSchema = new mongoose.Schema(
   {
@@ -59,9 +65,11 @@ const appointmentSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-    cancellationReason: {
+    doctorNotes: {
       type: String,
       trim: true,
+      maxlength: [200, "Doctor  200 characters"],
+      default: "",
     },
   },
   {
@@ -97,7 +105,9 @@ appointmentSchema.methods.isCancellable = function (minHoursBefore = 4) {
 
 appointmentSchema.methods.toLocalTime = function (ianaTimezone = IST) {
   const tz = ianaTimezone || IST;
-  const start = DateTime.fromJSDate(this.slotStartUTC, { zone: "utc" }).setZone(tz);
+  const start = DateTime.fromJSDate(this.slotStartUTC, { zone: "utc" }).setZone(
+    tz,
+  );
   const end = DateTime.fromJSDate(this.slotEndUTC, { zone: "utc" }).setZone(tz);
   return {
     start: start.toISO(),
