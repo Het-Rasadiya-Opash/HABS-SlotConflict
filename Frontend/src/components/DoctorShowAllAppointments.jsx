@@ -87,7 +87,7 @@ const DoctorShowAllAppointments = () => {
     dispatch(clearError());
     try {
       const params = filterStatus !== "ALL" ? { status: filterStatus } : {};
-      const res = await apiRequest.get("/appointment/", { params });
+      const res = await apiRequest.get("/appointment", { params });
       dispatch(setBookingResult(res.data.data));
       setLocalAppointments(res.data.data?.appointments ?? []);
     } catch (err) {

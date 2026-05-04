@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { setBookingContext } from "../features/appointmentSlice";
 import apiRequest from "../utils/apiRequest";
@@ -28,6 +28,7 @@ import AllSlotsModal from "../components/AllSlotsModal";
 const Home = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { currentUser } = useSelector((state) => state.users);
 
   const [specialty, setSpecialty] = useState("");
   const [location, setLocation] = useState("");
@@ -109,6 +110,14 @@ const Home = () => {
     }
   };
 
+  const hasSearchedRef = useRef(false);
+
+  useEffect(() => {
+    if (hasSearchedRef.current) return;
+    hasSearchedRef.current = true;
+    handleSearch();
+  }, []);
+
   useEffect(() => {
     const fetchMyWaitlist = async () => {
       try {
@@ -121,9 +130,10 @@ const Home = () => {
       } catch (error) {}
     };
 
-    handleSearch();
-    fetchMyWaitlist();
-  }, []);
+    if (currentUser?.role === "Patient") {
+      fetchMyWaitlist();
+    }
+  }, [currentUser]);
 
   const handleModalConfirm = (doctor) => {
     setModalDoctor(null);

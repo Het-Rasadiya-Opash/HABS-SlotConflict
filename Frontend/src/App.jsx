@@ -5,7 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import Register from "./pages/Register";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentUser, setCheckingAuth } from "./features/usersSlice";
-import { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import apiRequest from "./utils/apiRequest";
 import Navbar from "./components/Navbar";
 import Dashboard from "./pages/Dashboard";
@@ -19,7 +19,12 @@ import "react-toastify/dist/ReactToastify.css";
 const App = () => {
   const dispatch = useDispatch();
 
+  const hasCheckedAuth = React.useRef(false);
+
   useEffect(() => {
+    if (hasCheckedAuth.current) return;
+    hasCheckedAuth.current = true;
+
     const checkAuth = async () => {
       try {
         const response = await apiRequest.get("/users");

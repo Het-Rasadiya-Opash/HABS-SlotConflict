@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { formatDateIST, formatTimeIST } from "../utils/dateUtils";
 import {
   Calendar,
@@ -352,6 +352,7 @@ const Appointments = () => {
     }
   };
 
+  const lastFetchedId = useRef(null);
   useEffect(() => {
     const fetchAppointments = async () => {
       if (!currentUser) return;
@@ -368,8 +369,13 @@ const Appointments = () => {
         );
       }
     };
+
+    if (!currentUser) return;
+    if (lastFetchedId.current === currentUser._id) return;
+    lastFetchedId.current = currentUser._id;
+
     fetchAppointments();
-    if (currentUser) {
+    if (currentUser?.role === "Patient") {
       fetchWaitlists();
     }
   }, [dispatch, currentUser]);

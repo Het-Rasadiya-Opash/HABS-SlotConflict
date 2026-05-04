@@ -26,7 +26,7 @@ app.use("/api/users", userRouters);
 app.use("/api/doctor", doctorProfileRouter);
 app.use("/api/appointment", appointmentRouter);
 app.use("/api/clinic-admin", clinicAdminRouter);
-app.use("A/api/waitlist", waitListRouter);
+app.use("/api/waitlist", waitListRouter);
 
 //error handler
 app.use(errorHandler);
