@@ -214,10 +214,10 @@ const getNextOpenSlots = async (doctor, startDate, n = 5) => {
 
       for (const window of sortedWindows) {
         const [startH, startM] = window.start.split(":").map(Number);
-        const [endH,   endM]   = window.end.split(":").map(Number);
+        const [endH, endM] = window.end.split(":").map(Number);
 
         let currentTotalM = startH * 60 + startM;
-        const endTotalM   = endH   * 60 + endM;
+        const endTotalM = endH * 60 + endM;
 
         while (
           currentTotalM + doctor.slotDurationMin <= endTotalM &&
@@ -227,7 +227,9 @@ const getNextOpenSlots = async (doctor, startDate, n = 5) => {
           const m = currentTotalM % 60;
 
           const slotStartLocal = curLocal.set({ hour: h, minute: m });
-          const slotEndLocal = slotStartLocal.plus({ minutes: doctor.slotDurationMin });
+          const slotEndLocal = slotStartLocal.plus({
+            minutes: doctor.slotDurationMin,
+          });
 
           const slotStartUTC = slotStartLocal.toUTC();
           const slotEndUTC = slotEndLocal.toUTC();
@@ -237,7 +239,7 @@ const getNextOpenSlots = async (doctor, startDate, n = 5) => {
               doctorId: doctor._id,
               status: { $in: ["PENDING", "CONFIRMED"] },
               slotStartUTC: { $lt: slotEndUTC.toJSDate() },
-              slotEndUTC:   { $gt: slotStartUTC.toJSDate() },
+              slotEndUTC: { $gt: slotStartUTC.toJSDate() },
             });
 
             slots.push({
@@ -260,7 +262,6 @@ const getNextOpenSlots = async (doctor, startDate, n = 5) => {
 
   return slots;
 };
-
 
 export const searchDoctor = asyncHandler(async (req, res) => {
   const { specialty, location, date, n = 5 } = req.query;
@@ -291,7 +292,7 @@ export const searchDoctor = asyncHandler(async (req, res) => {
         ...doctor.toObject(),
         nextSlots,
       };
-    })
+    }),
   );
 
   let filteredResults = results;
